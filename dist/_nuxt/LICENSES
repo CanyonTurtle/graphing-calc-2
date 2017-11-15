@@ -1,0 +1,46 @@
+/**
+ * @license Fraction.js v4.0.2 09/09/2015
+ * http://www.xarg.org/2014/03/rational-numbers-in-javascript/
+ *
+ * Copyright (c) 2015, Robert Eisele (robert@xarg.org)
+ * Dual licensed under the MIT or GPL Version 2 licenses.
+ **/
+
+/**
+ * @license Complex.js v2.0.3 11/02/2016
+ *
+ * Copyright (c) 2016, Robert Eisele (robert@xarg.org)
+ * Dual licensed under the MIT or GPL Version 2 licenses.
+ **/
+
+/*!
+ * @overview es6-promise - a tiny implementation of Promises/A+.
+ * @copyright Copyright (c) 2014 Yehuda Katz, Tom Dale, Stefan Penner and contributors (Conversion to ES6 API by Jake Archibald)
+ * @license   Licensed under MIT license
+ *            See https://raw.githubusercontent.com/stefanpenner/es6-promise/master/LICENSE
+ * @version   4.1.1
+ */
+
+/*!
+ * Vue.js v2.4.4
+ * (c) 2014-2017 Evan You
+ * Released under the MIT License.
+ */
+
+/**
+ * vuex v2.5.0
+ * (c) 2017 Evan You
+ * @license MIT
+ */
+
+/**
+ * vue-meta v1.3.1
+ * (c) 2017 Declan de Wet & Atinux
+ * @license MIT
+ */
+
+/*
+object-assign
+(c) Sindre Sorhus
+@license MIT
+*/
