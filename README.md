@@ -20,3 +20,5 @@ $ npm run generate
 ```
 
 For detailed explanation on how things work, checkout the [Nuxt.js docs](https://github.com/nuxt/nuxt.js).
+
+Made with Vue.js, nuxt.js, bootstrap-vue.js, and vue-d3.js
