@@ -6,31 +6,44 @@
         <b-tab title="Intro" active>
           <h4 class="contentheader">What is this?</h4>
           <p>
-            My goal with this graphing calculator is to provide a
-            cool-looking, useful graphing calculator that is accessable
-            to anyone.
+            The purpose of this graphing calculator is to provide a
+            intuitive graphing calculator that is accessable
+            to everyone.
             <br>
-            To achieve my goal, I decided to make my
-            graphing calculator as a web application,
+          </p>
+          <h4 class="contentheader">Features</h4>
+          <li>Graph a function in terms of x</li>
+          <li>Derivative and 2nd Derivative</li>
+          <li>Approximate features of graph (zeros, extrema, inflection points)</li>
+        </b-tab>
+        <b-tab title="Planning" >
+          <h4 class="contentheader">Making The Plan</h4>
+          <p>
+            <br>
+            Before starting, the
+            the graphing algorithms, presentation,
+            and user interface design needed to be planned. From previous 
+            experience, Planning these things
+            beforehand could save alot of work later on.
+          </p>
+          <p>
+            The
+            graphing calculator was chosen to be a web application,
             which allows several benefits as a whole:
-            <li> Use of technologies I am familiar with (Vue, JavaScript)</li>
+            <li> Use of familiar technologies</li>
             <li> Easy prototyping with a development server </li>
             <li> Ecosystem benefits of NPM for finding graphing libraries, etc...</li>
             <li> Multi-platform (just a website).</li>
             <br>
-            So I decided to go for it!
           </p>
-        </b-tab>
-        <b-tab title="Planning" >
-          <h4 class="contentheader">Making the Plan</h4>
+          <h4 class="contentheader">Choosing The Technologies</h4>
           <p>
-            <br>
-            Before I started, I wanted to have a plan
-            for the graphing algorithms, presentation,
-            and user interface design. From previous 
-            experience, I knew that planning these things
-            beforehand could save alot of pain later on.
+            For scaffolding the frontend, <a href="https://nuxtjs.org">nuxt.js</a> was chosen because 
+            it allows static site generation along with integrating the
+            <a href="https://vuejs.org">Vue.js</a> frontend framework.
           </p>
+          <p> The data graphing library, <a href="">Vue-d3</a>, was chosen after the main technologies were picked.</p>
+
         </b-tab>
         <b-tab title="UX">
           <br>User experience tab!
@@ -47,6 +60,9 @@
 </template>
 <script>
 export default {
+  layout (ctx) {
+    return 'default'
+  },
   data () {
     return {
 

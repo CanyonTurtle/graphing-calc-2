@@ -1,16 +1,14 @@
 <template>
-  <div id="app" :style="{ backgroundColor: bgCol , color: textCol}">
+  <div id="app" :style="{color: textCol}">
     <head>
       <meta name="viewport" content="width=device-width, initial-scale=1">
     </head>
-    <div class="top" :style="{ backgroundColor: topBarCol } ">
       <h3 class="title" :style="{ color: titleCol }">GRAPHING CALC!</h3>
       <p class="dividerboi">
         <nuxt-link class="linkboi" to="/calc">try</nuxt-link>
         <nuxt-link class="linkboi" to="/docs">learn</nuxt-link>
         <nuxt-link class="linkboi" to="/credits">credits</nuxt-link>
       </p>
-    </div>
     <div>
       <transition name="fade">
         <nuxt/>
@@ -55,10 +53,8 @@ export default {
 }
 
 .top {
-  background-color: #39CCCC;
   padding: 10px;
   color: #000000;
-  background-image: linear-gradient(135deg, #5EFCE8 0%, #736EFE 100%)
 }
 
 .dividerboi {
@@ -85,7 +81,8 @@ h3 {
 }
 #app {
   display: block;
-  background-image: none;
+  background-image: linear-gradient(135deg, #5EFCE8 0%, #736EFE 100%);
+  height: 1400px;
 }
 .fade-enter-active, .fade-leave-active {
   transition-property: opacity;
@@ -98,5 +95,8 @@ h3 {
 
 .fade-enter, .fade-leave-active {
   opacity: 0
+}
+.title {
+  padding-top: 20px;
 }
 </style>

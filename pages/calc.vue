@@ -22,6 +22,9 @@ import PointTable from '~/components/PointTable.vue'
 
 export default {
   name: 'hello',
+  layout (ctx) {
+    return 'default'
+  },
   data () {
     return {
       msg: 'Welcome to Your Vue.js App'

@@ -1,18 +1,26 @@
 <template>
-  <section class="container">
-    <div>
-      <logo/>
-      <h1 class="title">
-        graphing-calc
-      </h1>
-      <h2 class="subtitle">
-        Nuxt.js project
-      </h2>
-      <div class="links">
-        <a href="https://nuxtjs.org/" target="_blank" class="button--green">Documentation</a>
-        <a href="https://github.com/nuxt/nuxt.js" target="_blank" class="button--grey">GitHub</a>
+  <section class="container hype">
+    <b-container>
+      <div>
+        </br>
+         <b-input-group>
+          <!-- Add-ons -->
+          <b-input-group-addon>
+            f(x)=
+          </b-input-group-addon
+
+          <!-- Main form input -->
+          <b-form-input v-model="$store.state.funInput" type="text"></b-form-input>
+
+          <!-- Attach Right button Group via slot -->
+          <b-input-group-button slot="right">
+            <nuxt-link to="/calc">
+              <b-btn variant="info" right>Graph!</b-btn>
+            </nuxt-link>
+          </b-input-group-button>
+          </b-input-group>
       </div>
-    </div>
+    </b-container>
   </section>
 </template>
 
@@ -20,6 +28,9 @@
 import Logo from '~/components/Logo.vue'
 
 export default {
+  layout (ctx) {
+    return 'default'
+  },
   components: {
     Logo
   }
