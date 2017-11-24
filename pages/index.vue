@@ -11,7 +11,7 @@
 
           <!-- Main form input -->
           <b-form-input v-model="$store.state.funInput" type="text"></b-form-input>
-
+          
           <!-- Attach Right button Group via slot -->
           <b-input-group-button slot="right">
             <nuxt-link to="/calc">

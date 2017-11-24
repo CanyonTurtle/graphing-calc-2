@@ -267,8 +267,6 @@ const scalePointSet = function (ps, graph) {
   newPS.pts = oldPointSet.pts.map((p) => (scalePoint(p, graph)))
   newPS.minYV = oldPointSet.minYV
   newPS.maxYV = oldPointSet.maxYV
-  console.log('scaled points....')
-  console.log(newPS)
   return newPS
 }
 
@@ -288,8 +286,6 @@ const commitSpecialPoint = function (graph, point) {
     scaledY: scaledPoint.my,
     name: point.mtype
   }
-  console.log('special point data:')
-  console.log(specialPointData)
   graph.ctx.$store.commit('addCoolPoint', specialPointData)
 }
 
@@ -332,6 +328,12 @@ const graphSetup = function (graph) {
   // tickmarks on X axis
   for (let i = 0; i <= 50; i++) {
     let putTick = function (xCoord) {
+      var extraSpace
+      if (`${xCoord}`.substring(0, 1) === '-') {
+        extraSpace = 1
+      } else {
+        extraSpace = 0
+      }
       graph.graphSvg.append('rect')
         .attr('x', xToScale(graph, xCoord))
         .attr('y', 0)
@@ -353,7 +355,7 @@ const graphSetup = function (graph) {
         .attr('height', 6)
         .style('fill', graph.axisColor)
         .attr('class', 'x-tick-text')
-        .text(((`${xCoord}`).substring(0, 4)) || '0')
+        .text(((`${xCoord}`).substring(0, 5 + extraSpace)) || '0')
         .attr('font-size', '10px')
     }
     putTick(i * graph.viewLengthSize / graph.nX)
@@ -363,6 +365,12 @@ const graphSetup = function (graph) {
   // tickmarks on Y axis
   for (let i = 0; i <= 50; i++) {
     let putTick = function (yCoord) {
+      var extraSpace
+      if (`${yCoord}`.substring(0, 1) === '-') {
+        extraSpace = 1
+      } else {
+        extraSpace = 0
+      }
       graph.graphSvg.append('rect')
         .attr('x', 0)
         .attr('y', yToScale(graph, yCoord))
@@ -383,7 +391,7 @@ const graphSetup = function (graph) {
         .attr('height', 1)
         .style('fill', graph.axisColor)
         .attr('class', 'y-tick-text')
-        .text(((`${yCoord}`).substring(0, 4)) || '0')
+        .text(((`${yCoord}`).substring(0, 5 + extraSpace)) || '0')
         .attr('font-size', '10px')
     }
     putTick(i * graph.rangeSize / graph.nY)
@@ -409,15 +417,23 @@ const graphSetup = function (graph) {
 }
 
 export default function graphFunc (fun, domainLeft, domainRight, rangeBottom, rangeTop, ctx) {
-  console.log('making a point set:')
-  console.log(PointSet())
-  console.log(PointSet().addNormalPoint(Point('normal', 1, 2)))
+  // validate the input
+  fun = fun.split('').map(char => {
+    if (char === 'X') {
+      return 'x'
+    }
+    return char
+  }).join('')
+
   // if the function is broke, stop
   try {
     evaluate(fun, 1)
   } catch (er) {
+    ctx.$store.commit('funcStatus', false)
     return 0
   }
+  ctx.$store.commit('boundStatus', true)
+  ctx.$store.commit('funcStatus', true)
 
   // if the domains aren't right, stop
   if (domainLeft >= domainRight) {
@@ -449,7 +465,6 @@ export default function graphFunc (fun, domainLeft, domainRight, rangeBottom, ra
   if (ctx.$store.state.isSecondDerivativeChecked) {
     consideredPointsList.push(sDPoints)
   }
-  // console.log(consideredPointsList)
   let globalMaxY = Math.max(...(consideredPointsList.map(ps => ps.maxYV)))
   let globalMinY = Math.min(...(consideredPointsList.map(ps => ps.minYV)))
 
@@ -468,8 +483,6 @@ export default function graphFunc (fun, domainLeft, domainRight, rangeBottom, ra
   // V ----- render the graph axis and numbers.
   graphSetup(graph)
 
-  console.log('original points!!!')
-  console.log(originalPoints)
   // V ----- render originalPoints
   let scaledOpoints = scalePointSet(originalPoints, graph)
   graphPointSetNormalPoints(graph, scaledOpoints, 'f')

@@ -4,11 +4,14 @@ import Themes from '~/themes'
 var isNum = function (n) {
   return !isNaN(parseFloat(n)) && isFinite(n)
 }
+
 // eslint-disable-next-line
 
 const createStore = () => {
   return new Vuex.Store({
     state: {
+      isBoundsCorrect: false,
+      isFunctionCorrect: true,
       hi: 1,
       domainLeft: -1,
       domainRight: 1,
@@ -27,15 +30,70 @@ const createStore = () => {
       currentTheme: Themes.new
     },
     mutations: {
+      boundStatus (state, status) {
+        state.isBoundsCorrect = status
+      },
+      funcStatus (state, status) {
+        state.isFunctionCorrect = status
+      },
       increment (state) {
         state.hi++
       },
+      setDomain (state, { which, value: val }) {
+        // validate
+        val = '' + val
+        let inputRegex = /^-?\d*\.{0,1}\d+$/
+        if (inputRegex.test(val)) {
+          // which is used as the bound.
+          switch (which) {
+            case 'left' : {
+              if (val >= state.domainRight) {
+                state.isBoundsCorrect = false
+                return
+              }
+              state.domainLeft = Math.max(val, -100000)
+              break
+            }
+            case 'right' : {
+              if (val <= state.domainLeft) {
+                state.isBoundsCorrect = false
+                return
+              }
+              state.domainRight = Math.min(val, 100000)
+              break
+            }
+            case 'top' : {
+              if (val <= state.rangeBottom) {
+                state.isBoundsCorrect = false
+                return
+              }
+              state.rangeTop = Math.min(val, 100000)
+              break
+            }
+            case 'bottom' : {
+              if (val >= state.rangeBottom) {
+                state.isBoundsCorrect = false
+                return
+              }
+              state.rangeBottom = Math.max(val, -100000)
+              break
+            }
+          }
+          state.needsRefreshedGraph = true
+          state.isBoundsCorrect = true
+          state.isDomainLeftZoomed = false
+        } else {
+          state.isBoundsCorrect = false
+        }
+      },
       setDomainLeft (state, dl) {
         if (dl === '' || dl == null) {
+          state.isBoundsCorrect = false
           dl = 0
         } else if (dl === '-') {
           dl = 0
         } else if (!isNum(dl)) {
+          state.isBoundsCorrect = false
           dl = 0
         }
         state.needsRefreshedGraph = true
@@ -45,23 +103,28 @@ const createStore = () => {
       },
       setRangeBottom (state, dl) {
         if (dl === '' || dl == null) {
+          state.isBoundsCorrect = false
           dl = 0
         } else if (dl === '-') {
           dl = 0
         } else if (!isNum(dl)) {
+          state.isBoundsCorrect = false
           dl = 0
         }
         state.needsRefreshedGraph = true
         state.isDomainLeftZoomed = false
         state.rangeBottom = Math.max(dl, -1000000)
+
         // console.log('domainLeft set to ' + state.domainLeft)
       },
       setRangeTop (state, dr) {
         if (dr === '' || dr == null) {
+          state.isBoundsCorrect = false
           dr = 0
         } else if (dr === '-') {
           dr = 0
         } else if (!isNum(dr)) {
+          state.isBoundsCorrect = false
           dr = 0
         }
 
@@ -71,10 +134,12 @@ const createStore = () => {
       },
       setDomainRight (state, dr) {
         if (dr === '' || dr == null) {
+          state.isBoundsCorrect = false
           dr = 0
         } else if (dr === '-') {
           dr = 0
         } else if (!isNum(dr)) {
+          state.isBoundsCorrect = false
           dr = 0
         }
 
@@ -109,7 +174,7 @@ const createStore = () => {
         state.coolPoints = []
       },
       setFunction (state, fun) {
-        state.needsRefreshedGraph = true
+        // state.needsRefreshedGraph = true
         // console.log('fun set.')
         state.funInput = fun
       },
@@ -122,6 +187,9 @@ const createStore = () => {
       },
       setTheme (state, newTheme) {
         state.currentTheme = Themes[newTheme]
+        state.needsRefreshedGraph = true
+      },
+      needsRefresh (state) {
         state.needsRefreshedGraph = true
       }
     }

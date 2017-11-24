@@ -3,8 +3,12 @@
     <b-card>
       <h5>FUNCTION</h5>
       <b-input-group left="f(x)=">
-        <b-form-input v-model="funInput" placeholder="50 * sin(0.1 * x)" v-on:keyup.enter="graphFunc()"></b-form-input>
+        <b-form-input v-model="funInput" placeholder="50 * sin(0.1 * x)"></b-form-input>
       </b-input-group>
+
+      <transition name="fade">
+        <p v-show="!isFunctionCorrect" :style="{color: '#ff0000'}">Something is wrong with the function.</p>
+      </transition>
 
       <h5 :style="{marginTop: '8px'}">DOMAIN</h5>
       <b-row no-gutters>
@@ -19,8 +23,8 @@
           </b-input-group>
         </b-col>
       </b-row>
-      <h5 :style="{marginTop: '8px'}" v-show="!form.isSYChecked">Y-BOUNDS</h5>
-      <b-row no-gutters v-show="!form.isSYChecked">
+      <h5 :style="{marginTop: '8px'}" v-show="!isSYChecked">Y-BOUNDS</h5>
+      <b-row no-gutters v-show="!isSYChecked">
         <b-col>
           <b-input-group left="y min:">
             <b-form-input v-model="rangeInputBottom"></b-form-input>
@@ -33,10 +37,14 @@
         </b-col>
       </b-row>
 
+      <transition name="fade">
+        <p v-show="!$store.state.isBoundsCorrect" :style="{color: '#ff0000'}">Something is wrong with the bounds.</p>
+      </transition>
+
       </br>
-      <b-form-checkbox id="radio1" @change="toggleDerivativeChecked" v-model="form.isDChecked" :style="{ color: $store.state.currentTheme.functionTwo }">1st derivative</b-form-checkbox>
-      <b-form-checkbox id="radio2" @change="toggleSecondDerivativeChecked" v-model="form.isDDChecked" :style="{ color: $store.state.currentTheme.functionThree }">2nd derivative</b-form-checkbox>
-      <b-form-checkbox id="radio3" @change="toggleAutoScaleYMaxMin" v-model="form.isSYChecked">Auto-scale x / y bounds</b-form-checkbox>
+      <b-form-checkbox id="radio1" v-model="isDChecked" @change="toggleDerivativeChecked" :style="{ color: $store.state.currentTheme.functionTwo }">1st derivative</b-form-checkbox>
+      <b-form-checkbox id="radio2" @change="toggleSecondDerivativeChecked" v-model="isDDChecked" :style="{ color: $store.state.currentTheme.functionThree }">2nd derivative</b-form-checkbox>
+      <b-form-checkbox id="radio3" @change="toggleAutoScaleYMaxMin" v-model="isSYChecked">Auto-scale x / y bounds</b-form-checkbox>
     </b-card>
   </div>
 </template>
@@ -46,20 +54,17 @@
     name: 'params',
     data () {
       return {
-        form: {
-          graphingFunction: '',
-          isDerivativeChecked: false,
-          isSecondDerivativeChecked: false,
-          secret: 'S3CR3T',
-          rangeInputBottom: 0,
-          rangeInputTop: 0,
-          domainInputLeft: 0,
-          domainInputRight: 0,
-          isDChecked: true,
-          isDDChecked: true,
-          isSYChecked: true
-          // funInput: '10 * sin(x)'
-        }
+        isFunctionCorrect: true,
+        graphingFunction: '',
+        isDerivativeChecked: false,
+        isSecondDerivativeChecked: false,
+        secret: 'S3CR3T',
+        isDChecked: true,
+        isDDChecked: true,
+        isSYChecked: true,
+        possibleGraphPID: null,
+        formTimer: 0
+        // funInput: '10 * sin(x)'
         // funInput: 'x'
       }
     },
@@ -69,6 +74,7 @@
           return this.$store.state.funInput
         },
         set (val) {
+          this.possiblyGraphFunc()
           this.$store.commit('setFunction', val)
         }
       },
@@ -77,9 +83,8 @@
           return this.$store.state.domainLeft
         },
         set (value) {
-          // console.log(value)
           if (value !== '' && value !== '-') {
-            this.$store.commit('setDomainLeft', value)
+            this.$store.commit('setDomain', { which: 'left', value })
           }
         }
       },
@@ -90,7 +95,7 @@
         set (value) {
           // console.log(value)
           if (value !== '' && value !== '-') {
-            this.$store.commit('setDomainRight', value)
+            this.$store.commit('setDomain', { which: 'right', value })
           }
         }
       },
@@ -101,7 +106,7 @@
         set (value) {
           // console.log(value)
           if (value !== '' && value !== '-') {
-            this.$store.commit('setRangeBottom', value)
+            this.$store.commit('setDomain', { which: 'bottom', value })
           }
         }
       },
@@ -112,30 +117,47 @@
         set (value) {
           // console.log(value)
           if (value !== '' && value !== '-') {
-            this.$store.commit('setRangeTop', value)
+            this.$store.commit('setDomain', { which: 'top', value })
           }
         }
       }
     },
     methods: {
+      possiblyGraphFunc () {
+        // graph the function, if attempt fails then update ui soon.
+        this.graphFunc()
+        if (this.$store.state.isFunctionCorrect) {
+          this.isFunctionCorrect = true
+        }
+        if (this.possibleGraphPID) {
+          clearInterval(this.possibleGraphPID)
+        }
+        this.formTimer = 0
+        this.possibleGraphPID = setInterval(() => {
+          this.formTimer += 10
+          if (this.formTimer > 500) {
+            this.isFunctionCorrect = this.$store.state.isFunctionCorrect
+            clearInterval(this.possibleGraphPID)
+          }
+        }, 10)
+      },
       graphFunc () {
         this.$store.commit('needsRefresh')
       },
       toggleDerivativeChecked () {
-        this.$store.commit('toggleIsDerivativeChecked', this.form.isDChecked)
+        setTimeout(() => { this.$store.commit('toggleIsDerivativeChecked', this.isDChecked) }, 10)
       },
       toggleSecondDerivativeChecked () {
-        this.$store.commit('toggleIsSecondDerivativeChecked', this.form.isDDChecked)
+        setTimeout(() => { this.$store.commit('toggleIsSecondDerivativeChecked', this.isDDChecked) }, 10)
       },
       toggleAutoScaleYMaxMin () {
-        this.$store.commit('toggleAutoScaleYMaxMin', this.form.isSYChecked)
+        setTimeout(() => { this.$store.commit('toggleAutoScaleYMaxMin', this.isSYChecked) }, 10)
       },
       graphHi () {
         this.$store.commit('increment')
       },
       onSubmit (evt) {
         evt.preventDefault()
-        alert(JSON.stringify(this.form))
       },
       resetForm () {
         this.form = {

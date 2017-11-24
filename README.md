@@ -1,4 +1,5 @@
 # graphing-calc
+Source for a function grapher on [this website](https://graphyourfunction.netlify.com/docs)
 
 > Nuxt.js project
 
@@ -19,6 +20,6 @@ $ npm start
 $ npm run generate
 ```
 
-For detailed explanation on how things work, checkout the [Nuxt.js docs](https://github.com/nuxt/nuxt.js).
+For an explanation of the project's purpose, check out [the docs](https://graphyourfunction.netlify.com/docs) on this project site.
 
 Made with Vue.js, nuxt.js, bootstrap-vue.js, and vue-d3.js

@@ -2,6 +2,7 @@
   <div>
     <b-container>
       <h3 class="docheader">DOCUMENTATION</h3>
+      <p>Read this source code on <a href='https://github.com/CanyonTurtle/graphing-calc-2'>GitHub.com</a></p>
       <b-tabs class="tabzz" justified>
         <b-tab title="Intro" active>
           <h4 class="contentheader">What is this?</h4>
@@ -9,7 +10,7 @@
             The purpose of this graphing calculator is to provide a
             intuitive graphing calculator that is accessable
             to everyone.
-            <br>
+            <br
           </p>
           <h4 class="contentheader">Features</h4>
           <li>Graph a function in terms of x</li>
@@ -46,10 +47,44 @@
 
         </b-tab>
         <b-tab title="UX">
-          <br>User experience tab!
+          <h4 class="contentheader">User Experience</h4>
+          <p>
+            <br>
+            This application was designed to be:
+            <li>Responsive to user interation</li>
+            <li>Adaptive to differing screen sizes</li>
+          </p>
+          <p>
+             In order to achieve responsive screen size, <a href='https://boostrap-vue.js.org'>Bootstrap Vue</a>
+            was used as a style framework. this allowed for fast construction of UI components that adjust the layout according to screen size.
+          </p>
+          <p>
+            the responsiveness, as far as re-rendering the graph when user input is changed, follows like this:
+            <li>Input is changed in one of the fields (function, domain, etc...)</li>
+            <li>An event is emmited to the <a href='store link'>store</a> which signals that the input changed</li>
+            <li>The store handles the input change, and makes sure the input is valid (proper domain, is a number, etc...)</li>
+            <li>If the input is valid, the graph is signaled to be re-rendered and all input errors are cleared. If not, an error message is toggled for the user.</li>
+            <br>
+          </p>
         </b-tab>
         <b-tab title="Algorithms">
-          <br>Algorithms tab!
+          <br>Algorithms
+          <p>
+            Graphing a function:
+            <li>start the x-value at the left domain</li>
+            <li>
+              keep going until the x-value reaches the right domain value: 
+              <ul>
+                <li>evaluate the point at the current x-value, add to the list of points</li>
+                <li>if the sign of the y-value is different than last time, there might be a zero:</li>
+              </ul>
+            </li>
+            <li>pass the points to the graphing function and put them on the graph</li>
+            <li>An event is emmited to the <a href='store link'>store</a> which signals that the input changed</li>
+            <li>The store handles the input change, and makes sure the input is valid (proper domain, is a number, etc...)</li>
+            <li>If the input is valid, the graph is signaled to be re-rendered and all input errors are cleared. If not, an error message is toggled for the user.</li>
+            <br>
+          </p>
         </b-tab>
         <b-tab title="Deployment">
           <br>Algorithms tab!

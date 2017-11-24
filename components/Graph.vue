@@ -125,6 +125,8 @@ export default {
         let br = this.$store.state.rangeBottom
         let tr = this.$store.state.rangeTop
         graphFunc(this.$store.state.funInput, ld, rd, br, tr, this)
+      } else {
+        this.$store.commit('boundStatus', false)
       }
     }
   },
