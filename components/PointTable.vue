@@ -32,12 +32,35 @@
         return (
           (function () {
             let table = []
-            let coolPoints = ctx.$store.state.coolPoints
+            var coolPoints = ctx.$store.state.coolPoints
+            coolPoints = coolPoints.map(point => {
+              if (point.name === 'leftEndpoint') {
+                point.name = 'X Lower Bound'
+              }
+              if (point.name === 'rightEndpoint') {
+                point.name = 'X Upper Bound'
+              }
+              if (point.name === 'inflectionpt') {
+                point.name = 'Inflection Point'
+              }
+              if (point.name === 'zero') {
+                point.name = 'Zero'
+              }
+              if (point.name === 'min') {
+                point.name = 'Relative Minimum'
+              }
+              if (point.name === 'max') {
+                point.name = 'Relative Maximum'
+              }
+              return point
+            })
             // console.log(coolPoints)
             for (let i in coolPoints) {
               table.push({
-                x: ('' + coolPoints[i].x).substring(0, 6 + ((coolPoints[i].x < 0) ? 1 : 0)),
-                y: ('' + coolPoints[i].y).substring(0, 6 + ((coolPoints[i].y < 0) ? 1 : 0)),
+                // x: ('' + coolPoints[i].x).substring(0, 6 + ((coolPoints[i].x < 0) ? 1 : 0)),
+                // y: ('' + coolPoints[i].y).substring(0, 6 + ((coolPoints[i].y < 0) ? 1 : 0)),
+                x: '' + parseFloat(coolPoints[i].x).toFixed(3),
+                y: '' + parseFloat(coolPoints[i].y).toFixed(3),
                 // scaledX: coolPoints[i].scaledX,
                 // scaledY: coolPoints[i].scaledY
                 name: coolPoints[i].name

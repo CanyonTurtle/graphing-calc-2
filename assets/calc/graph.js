@@ -41,8 +41,7 @@ const derive = function (f, x, grain) {
   return (evaluate(f, x) - evaluate(f, x - grain)) / grain
 }
 
-const getPoints = function (f, {dl, dr, grain}, setting) {
-  console.log('inside graphing function: ' + grain)
+const getPoints = function (f, {ctx, dl, dr, grain}, setting) {
   var pointSets = {
     originalPoints: null,
     dPoints: null,
@@ -90,7 +89,7 @@ const getPoints = function (f, {dl, dr, grain}, setting) {
   var inInterval = true
 
   // start 5 less than, end 5 greater than, to check the endpoints too.
-  for (let i = dl - (5 * grain); i < dr + (5 * grain); i += grain) {
+  for (let i = dl - (10 * grain); i < dr + (10 * grain); i += grain) {
     // needs to be tested.... what if it's NaN??
     inInterval = (i >= dl && i <= dr)
     // get the point, it's slope, and the slope's slope.
@@ -109,19 +108,27 @@ const getPoints = function (f, {dl, dr, grain}, setting) {
     let dpt = Point('normal', i, iSlope)
     let sdpt = Point('normal', i, iSlopeSlope)
 
+    var checkMinMaxList = []
+    checkMinMaxList.push(iOutput)
+    if (ctx.$store.state.isDerivativeChecked) {
+      checkMinMaxList.push(iSlope)
+    }
+    if (ctx.$store.state.isSecondDerivativeChecked) {
+      checkMinMaxList.push(iSlopeSlope)
+    }
+
     // eslint-disable-next-line no-constant-condition
     if (inInterval) {
       points.addNormalPoint(point)
       dpts.addNormalPoint(dpt)
       sdpts.addNormalPoint(sdpt)
-      minY = Math.min(minY, iOutput, iSlope, iSlopeSlope)
-      maxY = Math.max(maxY, iOutput, iSlope, iSlopeSlope)
+      maxY = Math.max(maxY, ...checkMinMaxList)
+      minY = Math.min(minY, ...checkMinMaxList)
     }
 
     // check sign change -> zero, minmax, inflection!
     newSign = Math.sign(iOutput)
     if (oldSign !== newSign && i >= dl) {
-      console.log('triggered at ' + i)
       // eslint-disable-next-line no-unused-vars
       // if (inInterval) {
       //   points.addSpecialPoint(Point('zero', i, 0))
@@ -131,11 +138,12 @@ const getPoints = function (f, {dl, dr, grain}, setting) {
       var jOutput
       var bi = i
       while (backtrackSign !== oldSign && bi > dl - 0.1) {
+        console.log('backtracking at ' + bi)
         jOutput = evaluate(f, bi)
         backtrackSign = Math.sign(jOutput)
         bi -= 0.001
       }
-      while (backtrackSign !== newSign && bi < dr + 0.1) {
+      while (backtrackSign === oldSign && bi < dr + 0.1) {
         jOutput = evaluate(f, bi)
         backtrackSign = Math.sign(jOutput)
         bi += 0.0001
@@ -145,7 +153,7 @@ const getPoints = function (f, {dl, dr, grain}, setting) {
         backtrackSign = Math.sign(jOutput)
         bi -= 0.00001
       }
-      if (bi >= dl && bi <= dr) {
+      if (bi >= dl - 0.01 && bi <= dr) {
         points.addSpecialPoint(Point('zero', bi, 0))
       }
     }
@@ -404,12 +412,57 @@ const graphPointSetSpecialPoints = function (graph, pointSet, ft) {
   var funcCol = (ft === 'f') ? graph.functionOne : (ft === 'fp') ? graph.functionTwo : graph.functionThree
   // let scaledPoints = scalePoints(JSON.parse(JSON.stringify(functionData.points)))
   pointSet.spts.forEach((point) => {
-    graph.graphSvg.append('circle')
-      .style('fill', funcCol)
-      .style('stroke', funcCol)
-      .attr('cx', xToScale(graph, point.mx))
-      .attr('cy', yToScale(graph, point.my))
-      .attr('r', 2)
+    if (point.mtype === 'leftEndpoint' || point.mtype === 'rightEndpoint') {
+      graph.graphSvg.append('circle')
+        .style('fill', graph.functionOne)
+        .style('stroke', funcCol)
+        .attr('cx', xToScale(graph, point.mx))
+        .attr('cy', yToScale(graph, point.my))
+        .attr('r', 2)
+    } else if (point.mtype === 'min') {
+      graph.graphSvg.append('circle')
+        .style('fill', graph.functionTwo)
+        .style('stroke', funcCol)
+        .attr('cx', xToScale(graph, point.mx))
+        .attr('cy', yToScale(graph, point.my))
+        .attr('r', 2)
+      graph.graphSvg.append('text')
+        .attr('x', xToScale(graph, point.mx))
+        .attr('y', yToScale(graph, point.my) - 4)
+        .attr('font-size', 10)
+        .text('min')
+    } else if (point.mtype === 'max') {
+      graph.graphSvg.append('circle')
+        .style('fill', graph.functionTwo)
+        .style('stroke', funcCol)
+        .attr('cx', xToScale(graph, point.mx))
+        .attr('cy', yToScale(graph, point.my))
+        .attr('r', 2)
+      graph.graphSvg.append('text')
+        .attr('x', xToScale(graph, point.mx))
+        .attr('y', yToScale(graph, point.my) - 4)
+        .attr('font-size', 10)
+        .text('max')
+    } else if (point.mtype === 'inflectionpt') {
+      graph.graphSvg.append('circle')
+        .style('fill', graph.functionThree)
+        .style('stroke', funcCol)
+        .attr('cx', xToScale(graph, point.mx))
+        .attr('cy', yToScale(graph, point.my))
+        .attr('r', 2)
+      graph.graphSvg.append('text')
+        .attr('x', xToScale(graph, point.mx))
+        .attr('y', yToScale(graph, point.my) - 4)
+        .attr('font-size', 10)
+        .text('ip')
+    } else {
+      graph.graphSvg.append('circle')
+        .style('fill', funcCol)
+        .style('stroke', funcCol)
+        .attr('cx', xToScale(graph, point.mx))
+        .attr('cy', yToScale(graph, point.my))
+        .attr('r', 2)
+    }
   })
 }
 
@@ -522,6 +575,7 @@ export default function graphFunc (fun, domainLeft, domainRight, rangeBottom, ra
     }
   } catch (er) {
     ctx.$store.commit('funcStatus', false)
+    console.log(er)
     return 0
   }
   ctx.$store.commit('boundStatus', true)

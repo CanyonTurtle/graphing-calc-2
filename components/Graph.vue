@@ -139,7 +139,7 @@ export default {
       try {
         let newW = this.$refs.graphArea.getBoundingClientRect().width
         if (newW !== oldW) {
-          this.setupGraph()
+          // this.setupGraph()
           oldW = newW
         }
       } catch (e) {
