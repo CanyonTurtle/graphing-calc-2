@@ -1,6 +1,6 @@
 import { evaluate } from '../calc/mathjs-computations'
 
-let NUM_POINTS = 100
+// let NUM_POINTS = 100
 
 function Point (t, x, y) {
   var pt = { mtype: 'normal' }
@@ -22,20 +22,35 @@ function PointSet () {
   ptset.addSpecialPoint = (pt) => {
     ptset.spts.push(pt)
   }
+  ptset.clearSpecialsByName = (name) => {
+    ptset.spts = ptset.spts.filter((spt) => {
+      if (spt.mtype === name) {
+        return false
+      }
+      return true
+    })
+  }
   return ptset
 }
 
 // imput a function string, get back a set of points representing
 // that function's evaluations across the interval.
 // as well as the derivative and second derivative!
-const getPoints = function (f, {dl, dr}, setting) {
+
+const derive = function (f, x, grain) {
+  return (evaluate(f, x) - evaluate(f, x - grain)) / grain
+}
+
+const getPoints = function (f, {dl, dr, grain}, setting) {
+  console.log('inside graphing function: ' + grain)
   var pointSets = {
     originalPoints: null,
     dPoints: null,
     sDPoints: null
   }
 
-  let grain = (dr - dl) / NUM_POINTS
+  let NUM_POINTS = 200
+  grain = (dr - dl) / NUM_POINTS
   var points = PointSet()
   var dpts = PointSet()
   var sdpts = PointSet()
@@ -63,89 +78,162 @@ const getPoints = function (f, {dl, dr}, setting) {
   var newSDSign
 
   var iOutput = firstPoint.my
+  // eslint-disable-next-line no-unused-vars
   var lastIOutput = firstPoint.my
   var lastSlope = null
+  var continuousMinmaxCount = 0
+  var contiguousInflectionCount = 0
 
-  // all the points in between
-  for (let i = dl - grain - grain; i < dr; i += grain) {
+  var dontShowMinMax = false
+  var dontShowInflectionPts = false
+
+  var inInterval = true
+
+  // start 5 less than, end 5 greater than, to check the endpoints too.
+  for (let i = dl - (5 * grain); i < dr + (5 * grain); i += grain) {
     // needs to be tested.... what if it's NaN??
-
+    inInterval = (i >= dl && i <= dr)
     // get the point, it's slope, and the slope's slope.
     iOutput = evaluate(f, i)
-    let iSlope = (iOutput - lastIOutput) / grain
+    let iSlope = derive(f, i, grain)
     let iSlopeSlope = (iSlope - lastSlope) / grain
 
     // cleanup for next run.
+    // eslint-disable-next-line no-unused-vars
     lastIOutput = iOutput
     lastSlope = iSlope
 
     // add the points for the function, derivative, and second derivative
     // don't add the points on the 1/2nd tries.
-    if (i >= dl) {
-      let point = Point('normal', i, iOutput)
-      points.addNormalPoint(point)
-      let dpt = Point('normal', i, iSlope)
-      dpts.addNormalPoint(dpt)
-      let sdpt = Point('normal', i, iSlopeSlope)
-      sdpts.addNormalPoint(sdpt)
+    let point = Point('normal', i, iOutput)
+    let dpt = Point('normal', i, iSlope)
+    let sdpt = Point('normal', i, iSlopeSlope)
 
+    // eslint-disable-next-line no-constant-condition
+    if (inInterval) {
+      points.addNormalPoint(point)
+      dpts.addNormalPoint(dpt)
+      sdpts.addNormalPoint(sdpt)
       minY = Math.min(minY, iOutput, iSlope, iSlopeSlope)
       maxY = Math.max(maxY, iOutput, iSlope, iSlopeSlope)
-      // check sign change -> zero, minmax, inflection!
-      newSign = Math.sign(iOutput)
-      if (oldSign !== newSign || newSign === 0) {
-        // eslint-disable-next-line no-unused-vars
-        points.addSpecialPoint(Point('zero', i, 0))
-      }
-      oldSign = newSign
-
-      newDSign = Math.sign(iSlope)
-      if (oldDSign !== newDSign || newDSign === 0) {
-        // add a special point here.
-        var funcMsg = 'min'
-        var sd = '1'
-        if (oldDSign === -1) {
-          sd = 1
-        }
-        if (oldDSign === 1) {
-          sd = -1
-        }
-        if (sd === 1) {
-          funcMsg = 'min'
-        }
-        if (sd === -1) {
-          funcMsg = 'max'
-        }
-        points.addSpecialPoint(Point(
-          funcMsg,
-          i,
-          iOutput
-        ))
-      }
-      oldDSign = newDSign
-
-      newSDSign = Math.sign(iSlopeSlope)
-      if (oldSDSign !== newSDSign || newSDSign === 0) {
-        points.addSpecialPoint(Point(
-          'inflectionpt',
-          i,
-          iOutput
-        ))
-      }
-      oldSDSign = newSDSign
     }
+
+    // check sign change -> zero, minmax, inflection!
+    newSign = Math.sign(iOutput)
+    if (oldSign !== newSign && i >= dl) {
+      console.log('triggered at ' + i)
+      // eslint-disable-next-line no-unused-vars
+      // if (inInterval) {
+      //   points.addSpecialPoint(Point('zero', i, 0))
+      // }
+      // experimental verion of zero finder!
+      var backtrackSign = null
+      var jOutput
+      var bi = i
+      while (backtrackSign !== oldSign && bi > dl - 0.1) {
+        jOutput = evaluate(f, bi)
+        backtrackSign = Math.sign(jOutput)
+        bi -= 0.001
+      }
+      while (backtrackSign !== newSign && bi < dr + 0.1) {
+        jOutput = evaluate(f, bi)
+        backtrackSign = Math.sign(jOutput)
+        bi += 0.0001
+      }
+      while (backtrackSign !== oldSign && bi > dl - 0.1) {
+        jOutput = evaluate(f, bi)
+        backtrackSign = Math.sign(jOutput)
+        bi -= 0.00001
+      }
+      if (bi >= dl && bi <= dr) {
+        points.addSpecialPoint(Point('zero', bi, 0))
+      }
+    }
+    oldSign = newSign
+
+    newDSign = Math.sign(iSlope)
+    if (oldDSign !== newDSign && i >= dl) {
+      continuousMinmaxCount++
+      if (continuousMinmaxCount > 5) {
+        dontShowMinMax = true
+      }
+      // add a special point here.
+      var funcMsg = 'min'
+      var sd = '1'
+      if (oldDSign === -1) {
+        sd = 1
+      }
+      if (oldDSign === 1) {
+        sd = -1
+      }
+      if (sd === 1) {
+        funcMsg = 'min'
+      }
+      if (sd === -1) {
+        funcMsg = 'max'
+      }
+      // if (inInterval) {
+      //   points.addSpecialPoint(Point(funcMsg, i, iOutput))
+      // }
+      var backtrackDSign = null
+      var jDOutput
+      var bDi = i
+      while (backtrackDSign !== oldDSign && bDi > dl - 0.1) {
+        jDOutput = derive(f, bDi, 0.001)
+        backtrackDSign = Math.sign(jDOutput)
+        bDi -= 0.001
+      }
+      while (backtrackDSign === oldDSign && bDi < dr + 0.1) {
+        jDOutput = derive(f, bDi, 0.0001)
+        backtrackDSign = Math.sign(jDOutput)
+        bDi += 0.0001
+      }
+      while (backtrackDSign !== oldDSign && bDi > dl - 0.1) {
+        jDOutput = derive(f, bDi, 0.00001)
+        backtrackDSign = Math.sign(jDOutput)
+        bDi -= 0.00001
+      }
+      if (bDi >= dl && bDi <= dr) {
+        let fHere = evaluate(f, bDi)
+        points.addSpecialPoint(Point(funcMsg, bDi, fHere))
+        if (Math.abs(fHere) < 0.01) {
+          points.addSpecialPoint(Point('zero', bDi, 0))
+        }
+      }
+    } else {
+      continuousMinmaxCount = 0
+    }
+    oldDSign = newDSign
+
+    newSDSign = Math.sign(iSlopeSlope)
+    if (oldSDSign !== newSDSign || newSDSign === 0) {
+      contiguousInflectionCount++
+      if (contiguousInflectionCount > 5) {
+        dontShowInflectionPts = true
+      }
+      if (inInterval) {
+        points.addSpecialPoint(Point('inflectionpt', i, iOutput))
+      }
+    } else {
+      contiguousInflectionCount = 0
+    }
+    oldSDSign = newSDSign
   }
   // last point
-  let lastPoint = Point(
-    'rightEndpoint',
-    dr,
-    evaluate(f, dr)
-  )
+  let lastPoint = Point('rightEndpoint', dr, evaluate(f, dr))
   points.addSpecialPoint(lastPoint)
 
   minY = Math.min(minY, lastPoint.my)
   maxY = Math.max(maxY, lastPoint.my)
 
+  // don't display any special points if there are striaght  lines.
+  if (dontShowInflectionPts) {
+    points.clearSpecialsByName('inflectionpt')
+  }
+  if (dontShowMinMax) {
+    points.clearSpecialsByName('min')
+    points.clearSpecialsByName('max')
+  }
   points.minYV = minY
   points.maxYV = maxY
   dpts.minYV = minY
@@ -160,7 +248,7 @@ const getPoints = function (f, {dl, dr}, setting) {
   return pointSets
 }
 
-const getGraphState = function (ctx, fun, dl, dr, rt, rb) {
+const getGraphState = function (ctx, fun, dl, dr, rt, rb, grain) {
   ctx.$d3.select('svg').remove()
   let graphHtml = ctx.$d3.select('.graph-area')
   let graphBox = ctx.$refs.graphArea.getBoundingClientRect()
@@ -235,7 +323,8 @@ const getGraphState = function (ctx, fun, dl, dr, rt, rb) {
     viewLengthSize,
     viewHeightSize,
     VIEW_ZOOMOUT_SCALE,
-    ...theme
+    ...theme,
+    grain
   }
 }
 
@@ -416,7 +505,7 @@ const graphSetup = function (graph) {
     .style('background-color', graph.axisColor)
 }
 
-export default function graphFunc (fun, domainLeft, domainRight, rangeBottom, rangeTop, ctx) {
+export default function graphFunc (fun, domainLeft, domainRight, rangeBottom, rangeTop, grain, ctx) {
   // validate the input
   fun = fun.split('').map(char => {
     if (char === 'X') {
@@ -427,7 +516,10 @@ export default function graphFunc (fun, domainLeft, domainRight, rangeBottom, ra
 
   // if the function is broke, stop
   try {
-    evaluate(fun, 1)
+    let testreturn = evaluate(fun, domainLeft)
+    if (isNaN(testreturn)) {
+      return 0
+    }
   } catch (er) {
     ctx.$store.commit('funcStatus', false)
     return 0
@@ -441,7 +533,7 @@ export default function graphFunc (fun, domainLeft, domainRight, rangeBottom, ra
   }
 
   // get the basic information about the graph.
-  let graph = getGraphState(ctx, fun, domainLeft, domainRight, rangeTop, rangeBottom)
+  let graph = getGraphState(ctx, fun, domainLeft, domainRight, rangeTop, rangeBottom, grain)
 
   // I ----- originalPoints = getPoints(function)
   let { originalPoints, dPoints, sDPoints } = getPoints(' ' + fun, graph, 'f')
@@ -478,7 +570,7 @@ export default function graphFunc (fun, domainLeft, domainRight, rangeBottom, ra
 
   if (ctx.$store.state.autoScaleYMaxMin) {
     // get the basic information about the graph.
-    graph = getGraphState(ctx, fun, domainLeft, domainRight, globalMaxY, globalMinY)
+    graph = getGraphState(ctx, fun, domainLeft, domainRight, globalMaxY, globalMinY, grain)
   }
   // V ----- render the graph axis and numbers.
   graphSetup(graph)

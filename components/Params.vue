@@ -7,7 +7,10 @@
       </b-input-group>
 
       <transition name="fade">
-        <p v-show="!isFunctionCorrect" :style="{color: '#ff0000'}">Something is wrong with the function.</p>
+        <p v-show="!isFunctionCorrect && !waitingForFuncFinish" :style="{color: '#ff0000'}">Something is wrong with the function.</p>
+      </transition>
+      <transition name="fade">
+        <p v-show="waitingForFuncFinish" :style="{color: '#000000'}">loading...</p>
       </transition>
 
       <h5 :style="{marginTop: '8px'}">DOMAIN</h5>
@@ -36,6 +39,13 @@
           </b-input-group>
         </b-col>
       </b-row>
+      <b-row no-gutters v-show="$store.state.isGrainCustomInput">
+        <b-col>
+          <b-input-group left="x-step:">
+            <b-form-input v-model="grain"></b-form-input>
+          </b-input-group>
+        </b-col>
+      </b-row>
 
       <transition name="fade">
         <p v-show="!$store.state.isBoundsCorrect" :style="{color: '#ff0000'}">Something is wrong with the bounds.</p>
@@ -45,6 +55,7 @@
       <b-form-checkbox id="radio1" v-model="isDChecked" @change="toggleDerivativeChecked" :style="{ color: $store.state.currentTheme.functionTwo }">1st derivative</b-form-checkbox>
       <b-form-checkbox id="radio2" @change="toggleSecondDerivativeChecked" v-model="isDDChecked" :style="{ color: $store.state.currentTheme.functionThree }">2nd derivative</b-form-checkbox>
       <b-form-checkbox id="radio3" @change="toggleAutoScaleYMaxMin" v-model="isSYChecked">Auto-scale x / y bounds</b-form-checkbox>
+      <!-- <b-form-checkbox id="radio4" @change="toggleGrainInput" v-model="isGrainInputChecked">Input a custom x-step size</b-form-checkbox> -->
     </b-card>
   </div>
 </template>
@@ -54,10 +65,12 @@
     name: 'params',
     data () {
       return {
+        waitingForFuncFinish: false,
         isFunctionCorrect: true,
         graphingFunction: '',
         isDerivativeChecked: false,
         isSecondDerivativeChecked: false,
+        isGrainInputChecked: false,
         secret: 'S3CR3T',
         isDChecked: true,
         isDDChecked: true,
@@ -76,6 +89,14 @@
         set (val) {
           this.possiblyGraphFunc()
           this.$store.commit('setFunction', val)
+        }
+      },
+      isFunctionNotCorrect: {
+        get () {
+          return !this.$store.state.isFunctionCorrect
+        },
+        set (val) {
+          this.isFunctionCorrect = val
         }
       },
       domainInputLeft: {
@@ -120,26 +141,38 @@
             this.$store.commit('setDomain', { which: 'top', value })
           }
         }
+      },
+      grain: {
+        get () {
+          return this.$store.state.grain
+        },
+        set (value) {
+          this.$store.commit('setGrain', value)
+        }
       }
     },
     methods: {
       possiblyGraphFunc () {
         // graph the function, if attempt fails then update ui soon.
-        this.graphFunc()
-        if (this.$store.state.isFunctionCorrect) {
-          this.isFunctionCorrect = true
-        }
         if (this.possibleGraphPID) {
           clearInterval(this.possibleGraphPID)
         }
-        this.formTimer = 0
-        this.possibleGraphPID = setInterval(() => {
-          this.formTimer += 10
-          if (this.formTimer > 500) {
-            this.isFunctionCorrect = this.$store.state.isFunctionCorrect
-            clearInterval(this.possibleGraphPID)
+        this.waitingForFuncFinish = true
+        setTimeout(() => {
+          this.waitingForFuncFinish = false
+          this.graphFunc()
+          if (this.$store.state.isFunctionCorrect) {
+            this.isFunctionCorrect = true
           }
-        }, 10)
+          this.formTimer = 0
+          this.possibleGraphPID = setInterval(() => {
+            this.formTimer += 10
+            if (this.formTimer > 500) {
+              this.isFunctionCorrect = this.$store.state.isFunctionCorrect
+              clearInterval(this.possibleGraphPID)
+            }
+          }, 10)
+        }, 700)
       },
       graphFunc () {
         this.$store.commit('needsRefresh')
@@ -152,6 +185,9 @@
       },
       toggleAutoScaleYMaxMin () {
         setTimeout(() => { this.$store.commit('toggleAutoScaleYMaxMin', this.isSYChecked) }, 10)
+      },
+      toggleGrainInput () {
+        setTimeout(() => { this.$store.commit('toggleGrainInput', this.isGrainInputChecked) }, 10)
       },
       graphHi () {
         this.$store.commit('increment')

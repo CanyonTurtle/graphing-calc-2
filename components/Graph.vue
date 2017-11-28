@@ -124,7 +124,8 @@ export default {
         let rd = this.$store.state.domainRight
         let br = this.$store.state.rangeBottom
         let tr = this.$store.state.rangeTop
-        graphFunc(this.$store.state.funInput, ld, rd, br, tr, this)
+        console.log(this.$store.state.grain)
+        graphFunc(this.$store.state.funInput, ld, rd, br, tr, this.$store.state.grain, this)
       } else {
         this.$store.commit('boundStatus', false)
       }

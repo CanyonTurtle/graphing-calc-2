@@ -36,8 +36,8 @@
             // console.log(coolPoints)
             for (let i in coolPoints) {
               table.push({
-                x: ('' + coolPoints[i].x).substring(0, 4),
-                y: ('' + coolPoints[i].y).substring(0, 4),
+                x: ('' + coolPoints[i].x).substring(0, 6 + ((coolPoints[i].x < 0) ? 1 : 0)),
+                y: ('' + coolPoints[i].y).substring(0, 6 + ((coolPoints[i].y < 0) ? 1 : 0)),
                 // scaledX: coolPoints[i].scaledX,
                 // scaledY: coolPoints[i].scaledY
                 name: coolPoints[i].name

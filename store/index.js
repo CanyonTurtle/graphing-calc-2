@@ -10,6 +10,8 @@ var isNum = function (n) {
 const createStore = () => {
   return new Vuex.Store({
     state: {
+      grain: 0.01,
+      isGrainCustomInput: false,
       isBoundsCorrect: false,
       isFunctionCorrect: true,
       hi: 1,
@@ -155,6 +157,16 @@ const createStore = () => {
         state.isSecondDerivativeChecked = val
         state.needsRefreshedGraph = true
       },
+      toggleGrainInput (state, val) {
+        state.isGrainCustomInput = val
+      },
+      setGrain (state, val) {
+        let inputRegex = /^-?\d*\.{0,1}\d+$/
+        if (inputRegex.test(val) && val > 0.001) {
+          state.grain = val
+          state.needsRefreshedGraph = true
+        }
+      },
       refreshedGraph (state) {
         state.needsRefreshedGraph = false
       },
@@ -176,7 +188,9 @@ const createStore = () => {
       setFunction (state, fun) {
         // state.needsRefreshedGraph = true
         // console.log('fun set.')
-        state.funInput = fun
+        if (fun.length !== 0) {
+          state.funInput = fun
+        }
       },
       needRefresh (state) {
         state.needsRefreshedGraph = true
