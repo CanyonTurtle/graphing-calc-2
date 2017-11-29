@@ -7,7 +7,7 @@
 </template>
 
 <script>
-import graphFunc from '~/assets/calc/graph.js'
+import graphFunc from '~/assets/calc/main.js'
 
 export default {
   name: 'graph',
