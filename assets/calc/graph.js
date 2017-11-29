@@ -41,6 +41,10 @@ const derive = function (f, x, grain) {
   return (evaluate(f, x + grain / 2) - evaluate(f, x - grain / 2)) / grain
 }
 
+const secondDerive = function (f, x, grain) {
+  return (derive(f, x + grain / 2, grain) - derive(f, x - grain / 2, grain)) / grain
+}
+
 const getPoints = function (f, {graphSvg, ctx, dl, dr, grain, ...graph}, setting) {
   var pointSets = {
     originalPoints: null,
@@ -79,7 +83,7 @@ const getPoints = function (f, {graphSvg, ctx, dl, dr, grain, ...graph}, setting
   var iOutput = firstPoint.my
   // eslint-disable-next-line no-unused-vars
   var lastIOutput = firstPoint.my
-  var lastSlope = null
+  // var lastSlope = null
   var continuousMinmaxCount = 0
   var contiguousInflectionCount = 0
 
@@ -96,12 +100,12 @@ const getPoints = function (f, {graphSvg, ctx, dl, dr, grain, ...graph}, setting
     // get the point, it's slope, and the slope's slope.
     iOutput = evaluate(f, i)
     let iSlope = derive(f, i, grain)
-    let iSlopeSlope = (iSlope - lastSlope) / grain
+    let iSlopeSlope = secondDerive(f, i, grain)
 
     // cleanup for next run.
     // eslint-disable-next-line no-unused-vars
     lastIOutput = iOutput
-    lastSlope = iSlope
+    // lastSlope = iSlope
 
     // add the points for the function, derivative, and second derivative
     // don't add the points on the 1/2nd tries.
@@ -142,7 +146,6 @@ const getPoints = function (f, {graphSvg, ctx, dl, dr, grain, ...graph}, setting
       var newI = i
       let j = 0
       while (j < 10 && Math.abs(jOutput) > 0.001) {
-        console.log('stepping: j = ' + j + 'rightbound: ' + rightBoundPoint.mx + 'leftbound: ' + leftBoundPoint.mx)
         j++
         newI = (rightBoundPoint.mx + leftBoundPoint.mx) / 2
         jOutput = evaluate(f, newI)
@@ -231,14 +234,41 @@ const getPoints = function (f, {graphSvg, ctx, dl, dr, grain, ...graph}, setting
     oldDSign = newDSign
 
     newSDSign = Math.sign(iSlopeSlope)
-    if (oldSDSign !== newSDSign || newSDSign === 0) {
+    if (oldSDSign !== newSDSign && i > dl) {
       contiguousInflectionCount++
       if (contiguousInflectionCount > 5) {
         dontShowInflectionPts = true
       }
-      if (inInterval) {
-        points.addSpecialPoint(Point('inflectionpt', i, iOutput))
+      // if (inInterval) {
+      //   points.addSpecialPoint(Point('inflectionpt', i, iOutput))
+      // }
+      var ot4 = performance.now()
+      var rightBoundPoint3 = Point('normal', i, iSlopeSlope)
+      var leftBoundPoint3 = JSON.parse(JSON.stringify(sdpts.pts[sdpts.pts.length - 2]))
+      var jOutput3 = 1
+      var newI3 = i
+      let j3 = 0
+      while (j3 < 20 && Math.abs(jOutput3) > 0.001) {
+        console.log('stepping: j = ' + j3 + 'rightbound: ' + rightBoundPoint3.mx + 'leftbound: ' + leftBoundPoint3.mx + ' output: ' + jOutput3)
+        j3++
+        newI3 = (rightBoundPoint3.mx + leftBoundPoint3.mx) / 2
+        jOutput3 = secondDerive(f, newI3, grain)
+        if (Math.abs(rightBoundPoint3.my) > Math.abs(leftBoundPoint3.my)) {
+          if (Math.sign(rightBoundPoint3.my) === Math.sign(leftBoundPoint3.my)) {
+            leftBoundPoint3.my = leftBoundPoint3.my * -1
+          }
+          rightBoundPoint3 = Point('normal', newI3, jOutput3)
+        } else {
+          if (Math.sign(rightBoundPoint3.my) === Math.sign(leftBoundPoint3.my)) {
+            rightBoundPoint3.my = rightBoundPoint3.my * -1
+          }
+          leftBoundPoint3 = Point('normal', newI3, jOutput3)
+        }
       }
+      if (newI3 >= dl) {
+        points.addSpecialPoint(Point('inflectionpt', newI3, evaluate(f, newI3)))
+      }
+      console.log('time inside third backtrack: ' + (performance.now() - ot4))
     } else {
       contiguousInflectionCount = 0
     }

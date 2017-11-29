@@ -150,11 +150,9 @@ const createStore = () => {
       },
       toggleIsDerivativeChecked (state, val) {
         state.isDerivativeChecked = val
-        state.needsRefreshedGraph = true
       },
       toggleIsSecondDerivativeChecked (state, val) {
         state.isSecondDerivativeChecked = val
-        state.needsRefreshedGraph = true
       },
       toggleGrainInput (state, val) {
         state.isGrainCustomInput = val
@@ -196,7 +194,6 @@ const createStore = () => {
       },
       toggleAutoScaleYMaxMin (state, mode) {
         state.autoScaleYMaxMin = mode
-        state.needsRefreshedGraph = true
       },
       setTheme (state, newTheme) {
         state.currentTheme = Themes[newTheme]

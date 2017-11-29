@@ -180,13 +180,22 @@
         this.$store.commit('needsRefresh')
       },
       toggleDerivativeChecked () {
-        setTimeout(() => { this.$store.commit('toggleIsDerivativeChecked', this.isDChecked) }, 10)
+        setTimeout(() => {
+          this.$store.commit('toggleIsDerivativeChecked', this.isDChecked)
+          this.possiblyGraphFunc()
+        }, 10)
       },
       toggleSecondDerivativeChecked () {
-        setTimeout(() => { this.$store.commit('toggleIsSecondDerivativeChecked', this.isDDChecked) }, 10)
+        setTimeout(() => {
+          this.$store.commit('toggleIsSecondDerivativeChecked', this.isDDChecked)
+          this.possiblyGraphFunc()
+        }, 10)
       },
       toggleAutoScaleYMaxMin () {
-        setTimeout(() => { this.$store.commit('toggleAutoScaleYMaxMin', this.isSYChecked) }, 10)
+        setTimeout(() => {
+          this.$store.commit('toggleAutoScaleYMaxMin', this.isSYChecked)
+          this.possiblyGraphFunc()
+        }, 10)
       },
       toggleGrainInput () {
         setTimeout(() => { this.$store.commit('toggleGrainInput', this.isGrainInputChecked) }, 10)
