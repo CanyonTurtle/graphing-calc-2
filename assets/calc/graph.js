@@ -1,7 +1,7 @@
 import { evaluate } from '../calc/mathjs-computations'
 
-// let NUM_POINTS = 100
-
+// Point data type. represents a place and a type of point.
+// Used extensively thruought graphing functions.
 function Point (t, x, y) {
   var pt = { mtype: 'normal' }
   pt.mtype = t
@@ -10,6 +10,12 @@ function Point (t, x, y) {
   return pt
 }
 
+// Represents a set of:
+// - normal points
+// - special points (zeros, inflection, etc.)
+//
+// also has information about the biggest and smallest Y value
+// which is used for calculating the view size later.
 function PointSet () {
   var ptset = {}
   ptset.pts = []
@@ -33,18 +39,19 @@ function PointSet () {
   return ptset
 }
 
-// imput a function string, get back a set of points representing
-// that function's evaluations across the interval.
-// as well as the derivative and second derivative!
-
+// derivation algorithm: simply a difference quotient.
 const derive = function (f, x, grain) {
   return (evaluate(f, x + grain / 2) - evaluate(f, x - grain / 2)) / grain
 }
 
+// second derivative algorithm is just the difference quotient of 2 derivations!
 const secondDerive = function (f, x, grain) {
   return (derive(f, x + grain / 2, grain) - derive(f, x - grain / 2, grain)) / grain
 }
 
+// input a function string, get back a set of points representing
+// that function's evaluations across the interval.
+// as well as the derivative and second derivative!
 const getPoints = function (f, {graphSvg, ctx, dl, dr, grain, ...graph}, setting) {
   var pointSets = {
     originalPoints: null,
@@ -52,26 +59,32 @@ const getPoints = function (f, {graphSvg, ctx, dl, dr, grain, ...graph}, setting
     sDPoints: null
   }
 
+  // the number of individual points.
   let NUM_POINTS = 200
+
+  // distance between points
   grain = (dr - dl) / NUM_POINTS
+
+  // sets of points to contain info about the points.
   var points = PointSet()
   var dpts = PointSet()
   var sdpts = PointSet()
 
+  // minimum/maximum used for the view calculation: needs to be stateful
+  // for accumulation and checking during the point calculaition.
   var minY = null
   var maxY = null
 
   // first point
-  let firstPoint = Point(
-    'leftEndpoint',
-    dl,
-    evaluate(f, dl)
-  )
+  let firstPoint = Point('leftEndpoint', dl, evaluate(f, dl))
   points.addSpecialPoint(firstPoint)
 
+  // Check the min/maxes with new point
   minY = Math.min(minY, firstPoint.my)
   maxY = Math.max(maxY, firstPoint.my)
 
+  // sign information is used to locate
+  // zeroes, derivatives, inflection pts, etc...
   var oldSign = Math.sign(firstPoint.my)
   var oldDSign = Math.sign(firstPoint.my)
   var oldSDSign = Math.sign(firstPoint.my)
@@ -80,38 +93,30 @@ const getPoints = function (f, {graphSvg, ctx, dl, dr, grain, ...graph}, setting
   var newDSign
   var newSDSign
 
+  // represents the 'y' return from a given iteration
   var iOutput = firstPoint.my
-  // eslint-disable-next-line no-unused-vars
-  var lastIOutput = firstPoint.my
-  // var lastSlope = null
+
+  // if there are straight lines, these are for catching them
   var continuousMinmaxCount = 0
   var contiguousInflectionCount = 0
-
   var dontShowMinMax = false
   var dontShowInflectionPts = false
 
-  // var inInterval = true
-
-  // start 5 less than, end 5 greater than, to check the endpoints too.
+  // MAIN ITERATION
+  // goes in sequence across the whole domain, before and after too to be accurate.
   for (let i = dl - (10 * grain); i < dr + (10 * grain); i += grain) {
     // needs to be tested.... what if it's NaN??
-    // inInterval = (i >= dl && i <= dr)
     // get the point, it's slope, and the slope's slope.
     iOutput = evaluate(f, i)
     let iSlope = derive(f, i, grain)
     let iSlopeSlope = secondDerive(f, i, grain)
 
-    // cleanup for next run.
-    // eslint-disable-next-line no-unused-vars
-    lastIOutput = iOutput
-    // lastSlope = iSlope
-
     // add the points for the function, derivative, and second derivative
-    // don't add the points on the 1/2nd tries.
     let point = Point('normal', i, iOutput)
     let dpt = Point('normal', i, iSlope)
     let sdpt = Point('normal', i, iSlopeSlope)
 
+    // check for mins or maxes.
     var checkMinMaxList = []
     checkMinMaxList.push(iOutput)
     if (ctx.$store.state.isDerivativeChecked) {
@@ -121,21 +126,22 @@ const getPoints = function (f, {graphSvg, ctx, dl, dr, grain, ...graph}, setting
       checkMinMaxList.push(iSlopeSlope)
     }
 
-    // eslint-disable-next-line no-constant-condition
+    // add the points to the point sets.
     points.addNormalPoint(point)
     dpts.addNormalPoint(dpt)
     sdpts.addNormalPoint(sdpt)
+
+    // update min/max from the points.
     maxY = Math.max(maxY, ...checkMinMaxList)
     minY = Math.min(minY, ...checkMinMaxList)
 
     // check sign change -> zero, minmax, inflection!
     newSign = Math.sign(iOutput)
     if (oldSign !== newSign && i >= dl) {
-      // eslint-disable-next-line no-unused-vars
-      // if (inInterval) {
-      //   points.addSpecialPoint(Point('zero', i, 0))
-      // }
-      // experimental verion of zero finder!
+      // ZERO FINDING ALGORITHM
+      // works by averaging the points
+      // on left and right side of interval
+      // to continuously approach the zero.
       var rightBoundPoint = Point('normal', i, iOutput)
       var leftBoundPoint = JSON.parse(JSON.stringify(points.pts[points.pts.length - 2]))
       var jOutput = 1
@@ -145,12 +151,16 @@ const getPoints = function (f, {graphSvg, ctx, dl, dr, grain, ...graph}, setting
         j++
         newI = (rightBoundPoint.mx + leftBoundPoint.mx) / 2
         jOutput = evaluate(f, newI)
+
+        // whichever point is furthest gets replaced by the found average, so the algorithm converges on 0
         if (Math.abs(rightBoundPoint.my) > Math.abs(leftBoundPoint.my)) {
+          // ensure 0 is in the middle
           if (Math.sign(rightBoundPoint.my) === Math.sign(leftBoundPoint.my)) {
             leftBoundPoint.my = leftBoundPoint.my * -1
           }
           rightBoundPoint = Point('normal', newI, jOutput)
         } else {
+          // ensure 0 is in the middle
           if (Math.sign(rightBoundPoint.my) === Math.sign(leftBoundPoint.my)) {
             rightBoundPoint.my = rightBoundPoint.my * -1
           }
@@ -158,18 +168,26 @@ const getPoints = function (f, {graphSvg, ctx, dl, dr, grain, ...graph}, setting
         }
       }
       if (newI >= dl && newI <= dr) {
+        // only add special point if on domain
         points.addSpecialPoint(Point('zero', newI, jOutput))
       }
     }
     oldSign = newSign
 
+    // MINMAX FINDING ALGORITHM
+    // same as zero algorithm.
     newDSign = Math.sign(iSlope)
     if (oldDSign !== newDSign && i >= dl) {
+      // this catches constant functions from making
+      // a bunch of min/max points
+      // since the derivative is constant on 0
       continuousMinmaxCount++
       if (continuousMinmaxCount > 5) {
         dontShowMinMax = true
       }
-      // add a special point here.
+
+      // The sign checks are for if the point
+      // is a min or a max.
       var funcMsg = 'min'
       var sd = '1'
       if (oldDSign === -1) {
@@ -184,10 +202,8 @@ const getPoints = function (f, {graphSvg, ctx, dl, dr, grain, ...graph}, setting
       if (sd === -1) {
         funcMsg = 'max'
       }
-      // if (inInterval) {
-      //   points.addSpecialPoint(Point(funcMsg, i, iOutput))
-      // }
 
+      // same deal: iteratively average the points on either side of the min/max.
       var rightBoundPoint2 = Point('normal', i, iSlope)
       var leftBoundPoint2 = JSON.parse(JSON.stringify(dpts.pts[dpts.pts.length - 2]))
       var jOutput2 = 1
@@ -209,34 +225,31 @@ const getPoints = function (f, {graphSvg, ctx, dl, dr, grain, ...graph}, setting
           leftBoundPoint2 = Point('normal', newI2, jOutput2)
         }
       }
+      // add the special point
       if (newI2 >= dl && newI2 <= dr) {
         points.addSpecialPoint(Point(funcMsg, newI2, evaluate(f, newI2)))
+        // SPECIAL ZERO IDENTIFICATION LOGIC
+        // helps when a zero doesn't cross the axis.
         if (Math.abs(evaluate(f, newI2)) < 0.01) {
           points.addSpecialPoint(Point('zero', newI2, 0))
         }
       }
-
-      // if (bDi >= dl && bDi <= dr) {
-      //   let fHere = evaluate(f, bDi)
-      //   points.addSpecialPoint(Point(funcMsg, bDi, fHere))
-      //   if (Math.abs(fHere) < 0.01) {
-      //     points.addSpecialPoint(Point('zero', bDi, 0))
-      //   }
-      // }
     } else {
+      // reset for new mins/maxes not in a row
       continuousMinmaxCount = 0
     }
     oldDSign = newDSign
 
+    // INFLECTION POINT FINDER
+    // same deal as the first two.
     newSDSign = Math.sign(iSlopeSlope)
     if (oldSDSign !== newSDSign && i > dl) {
+      // identify inflection points all in a row
+      // same deal as minmax finder
       contiguousInflectionCount++
       if (contiguousInflectionCount > 5) {
         dontShowInflectionPts = true
       }
-      // if (inInterval) {
-      //   points.addSpecialPoint(Point('inflectionpt', i, iOutput))
-      // }
       var rightBoundPoint3 = Point('normal', i, iSlopeSlope)
       var leftBoundPoint3 = JSON.parse(JSON.stringify(sdpts.pts[sdpts.pts.length - 2]))
       var jOutput3 = 1
@@ -259,9 +272,11 @@ const getPoints = function (f, {graphSvg, ctx, dl, dr, grain, ...graph}, setting
         }
       }
       if (newI3 >= dl && newI3 <= dr) {
+        // add the special point.
         points.addSpecialPoint(Point('inflectionpt', newI3, evaluate(f, newI3)))
       }
     } else {
+      // reset if the second derivative changes.
       contiguousInflectionCount = 0
     }
     oldSDSign = newSDSign
@@ -270,6 +285,7 @@ const getPoints = function (f, {graphSvg, ctx, dl, dr, grain, ...graph}, setting
   let lastPoint = Point('rightEndpoint', dr, evaluate(f, dr))
   points.addSpecialPoint(lastPoint)
 
+  // update min/max from the endpoint
   minY = Math.min(minY, lastPoint.my)
   maxY = Math.max(maxY, lastPoint.my)
 
@@ -281,6 +297,8 @@ const getPoints = function (f, {graphSvg, ctx, dl, dr, grain, ...graph}, setting
     points.clearSpecialsByName('min')
     points.clearSpecialsByName('max')
   }
+
+  // add the values to the point sets
   points.minYV = minY
   points.maxYV = maxY
   dpts.minYV = minY
@@ -288,6 +306,7 @@ const getPoints = function (f, {graphSvg, ctx, dl, dr, grain, ...graph}, setting
   sdpts.minYV = minY
   sdpts.maxYV = maxY
 
+  // consolidate the return object with the point sets
   pointSets.originalPoints = points
   pointSets.dPoints = dpts
   pointSets.sDPoints = sdpts
@@ -295,32 +314,31 @@ const getPoints = function (f, {graphSvg, ctx, dl, dr, grain, ...graph}, setting
   return pointSets
 }
 
+// get information about the graph.
 const getGraphState = function (ctx, fun, dl, dr, rt, rb, grain) {
   ctx.$d3.select('svg').remove()
   let graphHtml = ctx.$d3.select('.graph-area')
   let graphBox = ctx.$refs.graphArea.getBoundingClientRect()
   let maxEdge = (graphBox.width < graphBox.height) ? graphBox.width : graphBox.height
 
+  // size of domains
   var domainSize = dr - dl
   var rangeSize = (rt - rb)
 
+  // zooms out the view for the user
   var VIEW_ZOOMOUT_SCALE = 0.1
 
+  // calculates the view bounds
   var vl = dl - (Math.abs(dl) * maxEdge / 5000)
   var vr = dr + (Math.abs(dr) * maxEdge / 5000)
   var vt = rt + (Math.abs(rt) * maxEdge / 5000)
   var vb = rb - (Math.abs(rb) * maxEdge / 5000)
 
-  // if (vt > 0 && vb > 0) {
-  //   vb = 0.2
-  // }
-  // if (vt < 0 && vb < 0) {
-  //   vt = -0.2
-  // }
+  // size of viewport dimensions
   var viewLengthSize = vr - vl
   var viewHeightSize = vt - vb
 
-  // make sure axes are shown
+  // force the axes to show within the view
   if (vl >= 0 && vr >= 0) {
     vl = -0.15 * viewLengthSize
   }
@@ -336,14 +354,17 @@ const getGraphState = function (ctx, fun, dl, dr, rt, rb, grain) {
   var numToGridTickX = maxEdge / viewLengthSize
   var numToGridTickY = maxEdge / viewHeightSize
 
+  // coloring information
   let theme = ctx.$store.state.currentTheme
 
+  // adding the graph canvas
   let graphSvg = graphHtml.append('svg')
     .attr('width', maxEdge)
     .attr('height', maxEdge)
     .style('background-color', theme.graphColor)
     .attr('class', 'actual-graph-canvas')
 
+  // controls the number of grid ticks on the graph.
   var nX = 9
   var nY = 9
 
@@ -375,27 +396,31 @@ const getGraphState = function (ctx, fun, dl, dr, rt, rb, grain) {
   }
 }
 
+// map x points to the real-screen location
 const xToScale = function (graph, oX) {
   return (oX - graph.vl) * graph.numToGridTickX
 }
 
+// map y points to the real-screen location
 const yToScale = function (graph, oY) {
   return (-1 * oY + graph.vt) * graph.numToGridTickY
 }
 
+// map points to the real-screen location
 var scalePoint = function (oldPoint, graph) {
   var oldX = 0
   var oldY = 0
-  // if (oldPoint.type === 'normal') {
+
   oldX = oldPoint.mx
   oldY = oldPoint.my
-  // }
+
   let newX = xToScale(graph, oldX)
   let newY = yToScale(graph, oldY)
   var pt = Point(oldPoint.type, newX, newY)
   return pt
 }
 
+// map entire pointsets to the real-screen location
 const scalePointSet = function (ps, graph) {
   var oldPointSet = JSON.parse(JSON.stringify(ps))
   var newPS = PointSet()
@@ -406,13 +431,9 @@ const scalePointSet = function (ps, graph) {
   return newPS
 }
 
-// var rangeSize = (globalMaxY - globalMinY)
-// var numToGridTickY = maxEdge / rangeSize
-
-// var yToScale = function (oldY) {
-//   var newY = (-1 * oldY + globalMaxY) * numToGridTickY
-//   return newY
-// }
+// special points are labeled places on the graph
+// that also show in the table.
+// this tells the UI to have the points.
 const commitSpecialPoint = function (graph, point) {
   let scaledPoint = scalePoint(point, graph)
   let specialPointData = {
@@ -425,15 +446,16 @@ const commitSpecialPoint = function (graph, point) {
   graph.ctx.$store.commit('addCoolPoint', specialPointData)
 }
 
+// all the special points in a pointset get put in the UI.
 const commitSpecialPointSet = function (graph, pointSet) {
   for (let pk in pointSet.spts) {
     commitSpecialPoint(graph, pointSet.spts[pk])
   }
 }
 
-// const renderPointSet = function (ctx, pointSet) {
-// }
-
+// takes the normal points in a point set,
+// and graphs them - the rendering stage,
+// NOT the evaluating stage (see getPoints)
 const graphPointSetNormalPoints = function (graph, pointSet, ft) {
   var graphPoints = graph.ctx.$d3.line()
 
@@ -441,11 +463,12 @@ const graphPointSetNormalPoints = function (graph, pointSet, ft) {
   let dl = xToScale(graph, graph.dl)
   let dr = xToScale(graph, graph.dr)
 
+  // append the points to the SVG element in the UI
   graph.graphSvg.append('path')
     .style('fill', 'none')
     .style('stroke', funcCol)
     .attr('d', graphPoints(pointSet.pts.filter(point => {
-      console.log('point x is: ' + point.mx + ' dl is ' + dl)
+      // filter out points not in the domain interval
       if (point.mx >= dl && point.mx <= dr) {
         return true
       }
@@ -455,9 +478,13 @@ const graphPointSetNormalPoints = function (graph, pointSet, ft) {
     })))
 }
 
+// put special points on the graph
+// uses many unique cases for different points.
 const graphPointSetSpecialPoints = function (graph, pointSet, ft) {
+  // the color choice
   var funcCol = (ft === 'f') ? graph.functionOne : (ft === 'fp') ? graph.functionTwo : graph.functionThree
-  // let scaledPoints = scalePoints(JSON.parse(JSON.stringify(functionData.points)))
+
+  // each point is identified and a unique point is placed.
   pointSet.spts.forEach((point) => {
     if (point.mtype === 'leftEndpoint' || point.mtype === 'rightEndpoint') {
       graph.graphSvg.append('circle')
@@ -525,6 +552,8 @@ const graphPointSetSpecialPoints = function (graph, pointSet, ft) {
   })
 }
 
+// put the parts of the graph that need to
+// be there to understand it - axes, ticks, etc.
 const graphSetup = function (graph) {
   // tickmarks on X axis
   for (let i = 0; i <= 50; i++) {
@@ -617,9 +646,15 @@ const graphSetup = function (graph) {
     .style('background-color', graph.axisColor)
 }
 
+// FTC AREA VISUAL
+// updates the UI to show the lines representing the area
+// under f prime.
 const graphAreaUnderPoints = (graph, pointSet, ft) => {
+  // color
   var funcCol = (ft === 'f') ? graph.functionOne : (ft === 'fp') ? graph.functionTwo : graph.functionThree
-  // let scaledPoints = scalePoints(JSON.parse(JSON.stringify(functionData.points)))
+
+  // if the y value is negative, the rectangle is above.
+  // otherwise it is right at the x and Y location.
   pointSet.pts.forEach((point) => {
     let g = graph.graphSvg.append('rect')
       .style('fill', 'none')
@@ -636,8 +671,9 @@ const graphAreaUnderPoints = (graph, pointSet, ft) => {
   })
 }
 
+// the entry point of the graphing function
 export default function graphFunc (fun, domainLeft, domainRight, rangeBottom, rangeTop, grain, ctx) {
-  // validate the input
+  // Capital X goes to x
   fun = fun.split('').map(char => {
     if (char === 'X') {
       return 'x'
@@ -645,7 +681,8 @@ export default function graphFunc (fun, domainLeft, domainRight, rangeBottom, ra
     return char
   }).join('')
 
-  // if the function is broke, stop
+  // validate the input - ensure that the function
+  // is valid by trying it and if it fails, return
   try {
     let testreturn = evaluate(fun, domainLeft)
     if (isNaN(testreturn)) {
@@ -666,17 +703,8 @@ export default function graphFunc (fun, domainLeft, domainRight, rangeBottom, ra
   // get the basic information about the graph.
   let graph = getGraphState(ctx, fun, domainLeft, domainRight, rangeTop, rangeBottom, grain)
 
-  // I ----- originalPoints = getPoints(function)
+  // I - III ----- originalPoints = getPoints(function)
   let { originalPoints, dPoints, sDPoints } = getPoints(' ' + fun, graph, 'f')
-
-  // II ---- dPoints = getDerivativePoints(originalPoints)
-  // temporary
-  // let fPrime = derive(fun)
-  // let dPoints = getPoints(' ' + fPrime, graph, 'fp')
-
-  // // III --- dPoints = getDerivativePoints(dPoints)
-  // let fDPrime = derive(fPrime)
-  // let sDPoints = getPoints(' ' + fDPrime, graph, 'fpp')
 
   // IV ---- set bounds
   // get maximum y value.
@@ -691,7 +719,7 @@ export default function graphFunc (fun, domainLeft, domainRight, rangeBottom, ra
   let globalMaxY = Math.max(...(consideredPointsList.map(ps => ps.maxYV)))
   let globalMinY = Math.min(...(consideredPointsList.map(ps => ps.minYV)))
 
-  // make sure that the axes are shown.
+  // make sure that the axes are shown within the view.
   if (globalMaxY <= 0 && globalMinY <= 0) {
     globalMaxY = 0.05 * graph.viewHeightSize
   }
@@ -699,10 +727,13 @@ export default function graphFunc (fun, domainLeft, domainRight, rangeBottom, ra
     globalMinY = -0.05 * graph.viewHeightSize
   }
 
+  // if the autoscale is on, the graph is reset with new size.
+  // this alters thew view scaling for the rendering later.
   if (ctx.$store.state.autoScaleYMaxMin) {
     // get the basic information about the graph.
     graph = getGraphState(ctx, fun, domainLeft, domainRight, globalMaxY, globalMinY, grain)
   }
+
   // V ----- render the graph axis and numbers.
   graphSetup(graph)
 
@@ -710,27 +741,29 @@ export default function graphFunc (fun, domainLeft, domainRight, rangeBottom, ra
   let scaledOpoints = scalePointSet(originalPoints, graph)
   graphPointSetNormalPoints(graph, scaledOpoints, 'f')
   graphPointSetSpecialPoints(graph, scaledOpoints, 'f')
-  // VI ---- render dPoints
+
+  // VI ---- render derivaive points
   if (ctx.$store.state.isDerivativeChecked) {
     let scaledDpoints = scalePointSet(dPoints, graph)
     graphPointSetNormalPoints(graph, scaledDpoints, 'fp')
     graphPointSetSpecialPoints(graph, scaledDpoints, 'fp')
   }
 
-  // VII --- render sdPoints
+  // VII --- render second derivative Points
   if (ctx.$store.state.isSecondDerivativeChecked) {
     let scaledSDpoints = scalePointSet(sDPoints, graph)
     graphPointSetNormalPoints(graph, scaledSDpoints, 'fpp')
     graphPointSetSpecialPoints(graph, scaledSDpoints, 'fpp')
   }
+
   // add the special points to the store
   ctx.$store.commit('resetCoolPoints')
-
   commitSpecialPointSet(graph, originalPoints)
   commitSpecialPointSet(graph, dPoints)
   commitSpecialPointSet(graph, sDPoints)
 
   // show the FTC if required.
+  // only show the correct region
   if (graph.ctx.$store.state.showFTC) {
     dPoints.pts = dPoints.pts.filter(point => {
       return point.mx > graph.ctx.$store.state.domainLeft &&
