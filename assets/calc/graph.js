@@ -90,13 +90,12 @@ const getPoints = function (f, {graphSvg, ctx, dl, dr, grain, ...graph}, setting
   var dontShowMinMax = false
   var dontShowInflectionPts = false
 
-  var inInterval = true
+  // var inInterval = true
 
   // start 5 less than, end 5 greater than, to check the endpoints too.
-  var ot = performance.now()
   for (let i = dl - (10 * grain); i < dr + (10 * grain); i += grain) {
     // needs to be tested.... what if it's NaN??
-    inInterval = (i >= dl && i <= dr)
+    // inInterval = (i >= dl && i <= dr)
     // get the point, it's slope, and the slope's slope.
     iOutput = evaluate(f, i)
     let iSlope = derive(f, i, grain)
@@ -123,13 +122,11 @@ const getPoints = function (f, {graphSvg, ctx, dl, dr, grain, ...graph}, setting
     }
 
     // eslint-disable-next-line no-constant-condition
-    if (inInterval) {
-      points.addNormalPoint(point)
-      dpts.addNormalPoint(dpt)
-      sdpts.addNormalPoint(sdpt)
-      maxY = Math.max(maxY, ...checkMinMaxList)
-      minY = Math.min(minY, ...checkMinMaxList)
-    }
+    points.addNormalPoint(point)
+    dpts.addNormalPoint(dpt)
+    sdpts.addNormalPoint(sdpt)
+    maxY = Math.max(maxY, ...checkMinMaxList)
+    minY = Math.min(minY, ...checkMinMaxList)
 
     // check sign change -> zero, minmax, inflection!
     newSign = Math.sign(iOutput)
@@ -139,7 +136,6 @@ const getPoints = function (f, {graphSvg, ctx, dl, dr, grain, ...graph}, setting
       //   points.addSpecialPoint(Point('zero', i, 0))
       // }
       // experimental verion of zero finder!
-      var ot2 = performance.now()
       var rightBoundPoint = Point('normal', i, iOutput)
       var leftBoundPoint = JSON.parse(JSON.stringify(points.pts[points.pts.length - 2]))
       var jOutput = 1
@@ -161,11 +157,9 @@ const getPoints = function (f, {graphSvg, ctx, dl, dr, grain, ...graph}, setting
           leftBoundPoint = Point('normal', newI, jOutput)
         }
       }
-      if (newI >= dl) {
+      if (newI >= dl && newI <= dr) {
         points.addSpecialPoint(Point('zero', newI, jOutput))
       }
-
-      console.log('time inside first backtrack: ' + (performance.now() - ot2))
     }
     oldSign = newSign
 
@@ -194,7 +188,6 @@ const getPoints = function (f, {graphSvg, ctx, dl, dr, grain, ...graph}, setting
       //   points.addSpecialPoint(Point(funcMsg, i, iOutput))
       // }
 
-      var ot3 = performance.now()
       var rightBoundPoint2 = Point('normal', i, iSlope)
       var leftBoundPoint2 = JSON.parse(JSON.stringify(dpts.pts[dpts.pts.length - 2]))
       var jOutput2 = 1
@@ -216,11 +209,13 @@ const getPoints = function (f, {graphSvg, ctx, dl, dr, grain, ...graph}, setting
           leftBoundPoint2 = Point('normal', newI2, jOutput2)
         }
       }
-      if (newI2 >= dl) {
+      if (newI2 >= dl && newI2 <= dr) {
         points.addSpecialPoint(Point(funcMsg, newI2, evaluate(f, newI2)))
+        if (Math.abs(evaluate(f, newI2)) < 0.01) {
+          points.addSpecialPoint(Point('zero', newI2, 0))
+        }
       }
 
-      console.log('time inside second backtrack: ' + (performance.now() - ot3))
       // if (bDi >= dl && bDi <= dr) {
       //   let fHere = evaluate(f, bDi)
       //   points.addSpecialPoint(Point(funcMsg, bDi, fHere))
@@ -242,14 +237,12 @@ const getPoints = function (f, {graphSvg, ctx, dl, dr, grain, ...graph}, setting
       // if (inInterval) {
       //   points.addSpecialPoint(Point('inflectionpt', i, iOutput))
       // }
-      var ot4 = performance.now()
       var rightBoundPoint3 = Point('normal', i, iSlopeSlope)
       var leftBoundPoint3 = JSON.parse(JSON.stringify(sdpts.pts[sdpts.pts.length - 2]))
       var jOutput3 = 1
       var newI3 = i
       let j3 = 0
       while (j3 < 20 && Math.abs(jOutput3) > 0.001) {
-        console.log('stepping: j = ' + j3 + 'rightbound: ' + rightBoundPoint3.mx + 'leftbound: ' + leftBoundPoint3.mx + ' output: ' + jOutput3)
         j3++
         newI3 = (rightBoundPoint3.mx + leftBoundPoint3.mx) / 2
         jOutput3 = secondDerive(f, newI3, grain)
@@ -265,10 +258,9 @@ const getPoints = function (f, {graphSvg, ctx, dl, dr, grain, ...graph}, setting
           leftBoundPoint3 = Point('normal', newI3, jOutput3)
         }
       }
-      if (newI3 >= dl) {
+      if (newI3 >= dl && newI3 <= dr) {
         points.addSpecialPoint(Point('inflectionpt', newI3, evaluate(f, newI3)))
       }
-      console.log('time inside third backtrack: ' + (performance.now() - ot4))
     } else {
       contiguousInflectionCount = 0
     }
@@ -300,8 +292,6 @@ const getPoints = function (f, {graphSvg, ctx, dl, dr, grain, ...graph}, setting
   pointSets.dPoints = dpts
   pointSets.sDPoints = sdpts
 
-  var nt = performance.now()
-  console.log('took ' + (nt - ot) + ' milliseconds')
   return pointSets
 }
 
@@ -448,11 +438,19 @@ const graphPointSetNormalPoints = function (graph, pointSet, ft) {
   var graphPoints = graph.ctx.$d3.line()
 
   var funcCol = (ft === 'f') ? graph.functionOne : (ft === 'fp') ? graph.functionTwo : graph.functionThree
-  // let scaledPoints = scalePoints(JSON.parse(JSON.stringify(functionData.points)))
+  let dl = xToScale(graph, graph.dl)
+  let dr = xToScale(graph, graph.dr)
+
   graph.graphSvg.append('path')
     .style('fill', 'none')
     .style('stroke', funcCol)
-    .attr('d', graphPoints(pointSet.pts.map((point) => {
+    .attr('d', graphPoints(pointSet.pts.filter(point => {
+      console.log('point x is: ' + point.mx + ' dl is ' + dl)
+      if (point.mx >= dl && point.mx <= dr) {
+        return true
+      }
+      return false
+    }).map(point => {
       return [point.mx, point.my]
     })))
 }
@@ -655,7 +653,6 @@ export default function graphFunc (fun, domainLeft, domainRight, rangeBottom, ra
     }
   } catch (er) {
     ctx.$store.commit('funcStatus', false)
-    console.log(er)
     return 0
   }
   ctx.$store.commit('boundStatus', true)
