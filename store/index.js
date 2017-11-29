@@ -10,11 +10,14 @@ var isNum = function (n) {
 const createStore = () => {
   return new Vuex.Store({
     state: {
+      showFTC: false,
       grain: 0.01,
       isGrainCustomInput: false,
       isBoundsCorrect: false,
       isFunctionCorrect: true,
       hi: 1,
+      domainFTCLeft: -1,
+      domainFTCRight: 1,
       domainLeft: -1,
       domainRight: 1,
       rangeBottom: -10,
@@ -40,6 +43,36 @@ const createStore = () => {
       },
       increment (state) {
         state.hi++
+      },
+      setDomainFTC (state, { which, value: val }) {
+        // validate
+        val = '' + val
+        let inputRegex = /^-?\d*\.{0,1}\d+$/
+        if (inputRegex.test(val)) {
+          // which is used as the bound.
+          switch (which) {
+            case 'left' : {
+              if (val >= state.domainRight) {
+                state.isBoundsCorrect = false
+                return
+              }
+              state.domainFTCLeft = Math.max(val, -100000)
+              break
+            }
+            case 'right' : {
+              if (val <= state.domainLeft) {
+                state.isBoundsCorrect = false
+                return
+              }
+              state.domainFTCRight = Math.min(val, 100000)
+              break
+            }
+          }
+          state.isBoundsCorrect = true
+          state.isDomainLeftZoomed = false
+        } else {
+          state.isBoundsCorrect = false
+        }
       },
       setDomain (state, { which, value: val }) {
         // validate
@@ -191,6 +224,9 @@ const createStore = () => {
       },
       needRefresh (state) {
         state.needsRefreshedGraph = true
+      },
+      toggleShowFTC (state, val) {
+        state.showFTC = val
       },
       toggleAutoScaleYMaxMin (state, mode) {
         state.autoScaleYMaxMin = mode

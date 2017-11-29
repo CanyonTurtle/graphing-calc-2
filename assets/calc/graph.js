@@ -619,6 +619,25 @@ const graphSetup = function (graph) {
     .style('background-color', graph.axisColor)
 }
 
+const graphAreaUnderPoints = (graph, pointSet, ft) => {
+  var funcCol = (ft === 'f') ? graph.functionOne : (ft === 'fp') ? graph.functionTwo : graph.functionThree
+  // let scaledPoints = scalePoints(JSON.parse(JSON.stringify(functionData.points)))
+  pointSet.pts.forEach((point) => {
+    let g = graph.graphSvg.append('rect')
+      .style('fill', 'none')
+      .style('stroke', funcCol)
+      .attr('x', point.mx)
+      .attr('width', 0.1)
+    if (point.my - yToScale(graph, 0) >= 0) {
+      g.attr('height', Math.abs(point.my - yToScale(graph, 0)))
+        .attr('y', point.my - Math.abs(point.my - yToScale(graph, 0)))
+    } else {
+      g.attr('height', Math.abs(point.my - yToScale(graph, 0)))
+        .attr('y', point.my)
+    }
+  })
+}
+
 export default function graphFunc (fun, domainLeft, domainRight, rangeBottom, rangeTop, grain, ctx) {
   // validate the input
   fun = fun.split('').map(char => {
@@ -644,7 +663,7 @@ export default function graphFunc (fun, domainLeft, domainRight, rangeBottom, ra
 
   // if the domains aren't right, stop
   if (domainLeft >= domainRight) {
-    return 0
+    return
   }
 
   // get the basic information about the graph.
@@ -713,4 +732,14 @@ export default function graphFunc (fun, domainLeft, domainRight, rangeBottom, ra
   commitSpecialPointSet(graph, originalPoints)
   commitSpecialPointSet(graph, dPoints)
   commitSpecialPointSet(graph, sDPoints)
+
+  // show the FTC if required.
+  if (graph.ctx.$store.state.showFTC) {
+    dPoints.pts = dPoints.pts.filter(point => {
+      return point.mx > graph.ctx.$store.state.domainFTCLeft &&
+        point.mx < graph.ctx.$store.state.domainFTCRight
+    })
+    let scaledDpoints = scalePointSet(dPoints, graph)
+    graphAreaUnderPoints(graph, scaledDpoints, 'fp')
+  }
 }

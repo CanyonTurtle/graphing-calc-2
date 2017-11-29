@@ -55,7 +55,20 @@
       <b-form-checkbox id="radio1" v-model="isDChecked" @change="toggleDerivativeChecked" :style="{ color: $store.state.currentTheme.functionTwo }">1st derivative</b-form-checkbox>
       <b-form-checkbox id="radio2" @change="toggleSecondDerivativeChecked" v-model="isDDChecked" :style="{ color: $store.state.currentTheme.functionThree }">2nd derivative</b-form-checkbox>
       <b-form-checkbox id="radio3" @change="toggleAutoScaleYMaxMin" v-model="isSYChecked">Auto-scale x / y bounds</b-form-checkbox>
+      <b-form-checkbox id="radio4" @change="toggleShowFTC" v-model="showFTC">Show 1st FTC</b-form-checkbox>
       <!-- <b-form-checkbox id="radio4" @change="toggleGrainInput" v-model="isGrainInputChecked">Input a custom x-step size</b-form-checkbox> -->
+      <b-card v-show="showFTC">
+        <h5 v-show="showFTC" :style="{marginTop: '8px'}">FTC Bounds</h5>
+          <p v-show="waitingForFuncFinish" class="nopadding">loading FTC info...</p>
+        <div v-show="showFTC && !waitingForFuncFinish">
+          <p class="nopadding">F(x) = {{funInput}}</p>
+          <p class="nopadding">f(x) = F'(x) in red on graph</p>
+          <p class="nopadding">if f(x) is continuous on the closed interval [{{domainInputRight}}, {{domainInputLeft}}], then</p>
+          <p class="nopadding">By 1st FTC, F({{domainInputRight}}) - F({{domainInputLeft}}) = definate integral of f(x) from {{domainInputLeft}} to {{domainInputRight}}</p>
+          <p class="nopadding"> ~= {{parseFloat(topVal).toFixed(3)}} - {{parseFloat(bottomVal).toFixed(3)}}</p>
+          <p class="nopadding"> = {{parseFloat(topVal - bottomVal).toFixed(3)}}</p>
+        </div>
+      </b-card>
     </b-card>
   </div>
 </template>
@@ -65,6 +78,7 @@
     name: 'params',
     data () {
       return {
+        showFTC: false,
         waitingForFuncFinish: false,
         isFunctionCorrect: true,
         graphingFunction: '',
@@ -97,6 +111,29 @@
         },
         set (val) {
           this.isFunctionCorrect = val
+        }
+      },
+      domainFTCInputLeft: {
+        get () {
+          return this.$store.state.domainFTCLeft
+        },
+        set (value) {
+          if (value !== '' && value !== '-') {
+            this.$store.commit('setDomainFTC', { which: 'left', value })
+            this.possiblyGraphFunc()
+          }
+        }
+      },
+      domainFTCInputRight: {
+        get () {
+          return this.$store.state.domainFTCRight
+        },
+        set (value) {
+          // console.log(value)
+          if (value !== '' && value !== '-') {
+            this.$store.commit('setDomainFTC', { which: 'right', value })
+            this.possiblyGraphFunc()
+          }
         }
       },
       domainInputLeft: {
@@ -151,7 +188,26 @@
         set (value) {
           this.$store.commit('setGrain', value)
         }
+      },
+      bottomVal () {
+        let point = this.$store.state.coolPoints.filter(point => {
+          return point.name === 'X Lower Bound'
+        })[0]
+        if (point) {
+          return point.y
+        }
+        return 0
+      },
+      topVal () {
+        let point = this.$store.state.coolPoints.filter(point => {
+          return point.name === 'X Upper Bound'
+        })[0]
+        if (point) {
+          return point.y
+        }
+        return 0
       }
+
     },
     methods: {
       possiblyGraphFunc () {
@@ -178,6 +234,12 @@
       },
       graphFunc () {
         this.$store.commit('needsRefresh')
+      },
+      toggleShowFTC () {
+        setTimeout(() => {
+          this.$store.commit('toggleShowFTC', this.showFTC)
+          this.possiblyGraphFunc()
+        }, 10)
       },
       toggleDerivativeChecked () {
         setTimeout(() => {
@@ -233,5 +295,10 @@
 #radio1 {
   background-color: #000000;
   color: #000000;
+}
+
+.nopadding {
+  margin: 0px;
+  text-align: left;
 }
 </style>
