@@ -105,6 +105,9 @@ export default {
     }
   },
   methods: {
+    triggerFunction () {
+      alert('hi')
+    },
     setupGraph () {
       if (this.$refs.graphArea) {
         try {
@@ -143,7 +146,6 @@ export default {
           oldW = newW
         }
       } catch (e) {
-        console.log(e)
       }
     }, 1000)
   }

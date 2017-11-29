@@ -41,7 +41,7 @@ const derive = function (f, x, grain) {
   return (evaluate(f, x) - evaluate(f, x - grain)) / grain
 }
 
-const getPoints = function (f, {ctx, dl, dr, grain}, setting) {
+const getPoints = function (f, {graphSvg, ctx, dl, dr, grain, ...graph}, setting) {
   var pointSets = {
     originalPoints: null,
     dPoints: null,
@@ -89,6 +89,7 @@ const getPoints = function (f, {ctx, dl, dr, grain}, setting) {
   var inInterval = true
 
   // start 5 less than, end 5 greater than, to check the endpoints too.
+  var ot = performance.now()
   for (let i = dl - (10 * grain); i < dr + (10 * grain); i += grain) {
     // needs to be tested.... what if it's NaN??
     inInterval = (i >= dl && i <= dr)
@@ -137,18 +138,19 @@ const getPoints = function (f, {ctx, dl, dr, grain}, setting) {
       var backtrackSign = null
       var jOutput
       var bi = i
-      while (backtrackSign !== oldSign && bi > dl - 0.1) {
+      var ot2 = performance.now()
+      while (backtrackSign !== oldSign && bi > dl - 0.01) {
         console.log('backtracking at ' + bi)
         jOutput = evaluate(f, bi)
         backtrackSign = Math.sign(jOutput)
         bi -= 0.001
       }
-      while (backtrackSign === oldSign && bi < dr + 0.1) {
+      while (backtrackSign === oldSign && bi < dr + 0.001) {
         jOutput = evaluate(f, bi)
         backtrackSign = Math.sign(jOutput)
         bi += 0.0001
       }
-      while (backtrackSign !== oldSign && bi > dl - 0.1) {
+      while (backtrackSign !== oldSign && bi > dl - 0.0001) {
         jOutput = evaluate(f, bi)
         backtrackSign = Math.sign(jOutput)
         bi -= 0.00001
@@ -156,6 +158,7 @@ const getPoints = function (f, {ctx, dl, dr, grain}, setting) {
       if (bi >= dl - 0.01 && bi <= dr) {
         points.addSpecialPoint(Point('zero', bi, 0))
       }
+      console.log('time inside first backtrack: ' + (performance.now() - ot2))
     }
     oldSign = newSign
 
@@ -186,17 +189,17 @@ const getPoints = function (f, {ctx, dl, dr, grain}, setting) {
       var backtrackDSign = null
       var jDOutput
       var bDi = i
-      while (backtrackDSign !== oldDSign && bDi > dl - 0.1) {
+      while (backtrackDSign !== oldDSign && bDi > dl - 0.01) {
         jDOutput = derive(f, bDi, 0.001)
         backtrackDSign = Math.sign(jDOutput)
         bDi -= 0.001
       }
-      while (backtrackDSign === oldDSign && bDi < dr + 0.1) {
+      while (backtrackDSign === oldDSign && bDi < dr + 0.001) {
         jDOutput = derive(f, bDi, 0.0001)
         backtrackDSign = Math.sign(jDOutput)
         bDi += 0.0001
       }
-      while (backtrackDSign !== oldDSign && bDi > dl - 0.1) {
+      while (backtrackDSign !== oldDSign && bDi > dl - 0.0001) {
         jDOutput = derive(f, bDi, 0.00001)
         backtrackDSign = Math.sign(jDOutput)
         bDi -= 0.00001
@@ -253,6 +256,8 @@ const getPoints = function (f, {ctx, dl, dr, grain}, setting) {
   pointSets.dPoints = dpts
   pointSets.sDPoints = sdpts
 
+  var nt = performance.now()
+  console.log('took ' + (nt - ot) + ' milliseconds')
   return pointSets
 }
 
@@ -455,6 +460,18 @@ const graphPointSetSpecialPoints = function (graph, pointSet, ft) {
         .attr('y', yToScale(graph, point.my) - 4)
         .attr('font-size', 10)
         .text('ip')
+    } else if (point.mtype === 'zero') {
+      graph.graphSvg.append('circle')
+        .style('fill', funcCol)
+        .style('stroke', funcCol)
+        .attr('cx', xToScale(graph, point.mx))
+        .attr('cy', yToScale(graph, point.my))
+        .attr('r', 2)
+      graph.graphSvg.append('text')
+        .attr('x', xToScale(graph, point.mx))
+        .attr('y', yToScale(graph, point.my) - 4)
+        .attr('font-size', 10)
+        .text('z')
     } else {
       graph.graphSvg.append('circle')
         .style('fill', funcCol)

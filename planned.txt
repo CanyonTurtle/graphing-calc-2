@@ -1,0 +1,15 @@
+PLANNED FEATURES
+
++ fix the sqrt and log functions.
+
++ extreme slowness for large interval sizes.
+
++ stop passing around random data.
+
++ make axis tickmarks coincide with better numbers
+
++ finish documentation
+
++ implement backtrack for inflection points
+
++ implement de-coupling of graph and point list.

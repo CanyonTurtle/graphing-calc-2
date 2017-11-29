@@ -9,7 +9,7 @@
         </p>
       </ul>
     </div> -->
-    <b-table striped hover :items="coolPoints"></b-table>
+    <b-table striped hover :fields="['x', 'y', 'name']" :items="coolPoints"></b-table>
     <!-- {{ coolPoints }} -->
   </div>
   </b-card> 
@@ -20,7 +20,14 @@
     name: 'point-table',
     data () {
       return {
-
+        pointVariants: {
+          leftEndpoint: 'primary',
+          rightEndpoint: 'primary',
+          inflectionpt: 'warning',
+          zero: 'success',
+          min: 'danger',
+          max: 'danger'
+        }
       }
     },
     computed: {
@@ -30,10 +37,11 @@
       coolPoints () {
         let ctx = this
         return (
-          (function () {
+          (() => {
             let table = []
             var coolPoints = ctx.$store.state.coolPoints
             coolPoints = coolPoints.map(point => {
+              point.variant = this.pointVariants[point.name] || 'default'
               if (point.name === 'leftEndpoint') {
                 point.name = 'X Lower Bound'
               }
@@ -63,7 +71,8 @@
                 y: '' + parseFloat(coolPoints[i].y).toFixed(3),
                 // scaledX: coolPoints[i].scaledX,
                 // scaledY: coolPoints[i].scaledY
-                name: coolPoints[i].name
+                name: coolPoints[i].name,
+                _rowVariant: coolPoints[i].variant
               })
             }
             return table
