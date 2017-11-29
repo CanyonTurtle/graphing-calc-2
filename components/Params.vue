@@ -106,6 +106,7 @@
         set (value) {
           if (value !== '' && value !== '-') {
             this.$store.commit('setDomain', { which: 'left', value })
+            this.possiblyGraphFunc()
           }
         }
       },
@@ -117,6 +118,7 @@
           // console.log(value)
           if (value !== '' && value !== '-') {
             this.$store.commit('setDomain', { which: 'right', value })
+            this.possiblyGraphFunc()
           }
         }
       },

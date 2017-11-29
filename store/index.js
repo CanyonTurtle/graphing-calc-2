@@ -81,7 +81,6 @@ const createStore = () => {
               break
             }
           }
-          state.needsRefreshedGraph = true
           state.isBoundsCorrect = true
           state.isDomainLeftZoomed = false
         } else {

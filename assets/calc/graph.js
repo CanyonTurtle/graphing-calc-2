@@ -38,7 +38,7 @@ function PointSet () {
 // as well as the derivative and second derivative!
 
 const derive = function (f, x, grain) {
-  return (evaluate(f, x) - evaluate(f, x - grain)) / grain
+  return (evaluate(f, x + grain / 2) - evaluate(f, x - grain / 2)) / grain
 }
 
 const getPoints = function (f, {graphSvg, ctx, dl, dr, grain, ...graph}, setting) {
@@ -135,29 +135,33 @@ const getPoints = function (f, {graphSvg, ctx, dl, dr, grain, ...graph}, setting
       //   points.addSpecialPoint(Point('zero', i, 0))
       // }
       // experimental verion of zero finder!
-      var backtrackSign = null
-      var jOutput
-      var bi = i
       var ot2 = performance.now()
-      while (backtrackSign !== oldSign && bi > dl - 0.01) {
-        console.log('backtracking at ' + bi)
-        jOutput = evaluate(f, bi)
-        backtrackSign = Math.sign(jOutput)
-        bi -= 0.001
+      var rightBoundPoint = Point('normal', i, iOutput)
+      var leftBoundPoint = JSON.parse(JSON.stringify(points.pts[points.pts.length - 2]))
+      var jOutput = 1
+      var newI = i
+      let j = 0
+      while (j < 10 && Math.abs(jOutput) > 0.001) {
+        console.log('stepping: j = ' + j + 'rightbound: ' + rightBoundPoint.mx + 'leftbound: ' + leftBoundPoint.mx)
+        j++
+        newI = (rightBoundPoint.mx + leftBoundPoint.mx) / 2
+        jOutput = evaluate(f, newI)
+        if (Math.abs(rightBoundPoint.my) > Math.abs(leftBoundPoint.my)) {
+          if (Math.sign(rightBoundPoint.my) === Math.sign(leftBoundPoint.my)) {
+            leftBoundPoint.my = leftBoundPoint.my * -1
+          }
+          rightBoundPoint = Point('normal', newI, jOutput)
+        } else {
+          if (Math.sign(rightBoundPoint.my) === Math.sign(leftBoundPoint.my)) {
+            rightBoundPoint.my = rightBoundPoint.my * -1
+          }
+          leftBoundPoint = Point('normal', newI, jOutput)
+        }
       }
-      while (backtrackSign === oldSign && bi < dr + 0.001) {
-        jOutput = evaluate(f, bi)
-        backtrackSign = Math.sign(jOutput)
-        bi += 0.0001
+      if (newI >= dl) {
+        points.addSpecialPoint(Point('zero', newI, jOutput))
       }
-      while (backtrackSign !== oldSign && bi > dl - 0.0001) {
-        jOutput = evaluate(f, bi)
-        backtrackSign = Math.sign(jOutput)
-        bi -= 0.00001
-      }
-      if (bi >= dl - 0.01 && bi <= dr) {
-        points.addSpecialPoint(Point('zero', bi, 0))
-      }
+
       console.log('time inside first backtrack: ' + (performance.now() - ot2))
     }
     oldSign = newSign
@@ -186,31 +190,41 @@ const getPoints = function (f, {graphSvg, ctx, dl, dr, grain, ...graph}, setting
       // if (inInterval) {
       //   points.addSpecialPoint(Point(funcMsg, i, iOutput))
       // }
-      var backtrackDSign = null
-      var jDOutput
-      var bDi = i
-      while (backtrackDSign !== oldDSign && bDi > dl - 0.01) {
-        jDOutput = derive(f, bDi, 0.001)
-        backtrackDSign = Math.sign(jDOutput)
-        bDi -= 0.001
-      }
-      while (backtrackDSign === oldDSign && bDi < dr + 0.001) {
-        jDOutput = derive(f, bDi, 0.0001)
-        backtrackDSign = Math.sign(jDOutput)
-        bDi += 0.0001
-      }
-      while (backtrackDSign !== oldDSign && bDi > dl - 0.0001) {
-        jDOutput = derive(f, bDi, 0.00001)
-        backtrackDSign = Math.sign(jDOutput)
-        bDi -= 0.00001
-      }
-      if (bDi >= dl && bDi <= dr) {
-        let fHere = evaluate(f, bDi)
-        points.addSpecialPoint(Point(funcMsg, bDi, fHere))
-        if (Math.abs(fHere) < 0.01) {
-          points.addSpecialPoint(Point('zero', bDi, 0))
+
+      var ot3 = performance.now()
+      var rightBoundPoint2 = Point('normal', i, iSlope)
+      var leftBoundPoint2 = JSON.parse(JSON.stringify(dpts.pts[dpts.pts.length - 2]))
+      var jOutput2 = 1
+      var newI2 = i
+      let j2 = 0
+      while (j2 < 20 && Math.abs(jOutput2) > 0.001) {
+        j2++
+        newI2 = (rightBoundPoint2.mx + leftBoundPoint2.mx) / 2
+        jOutput2 = derive(f, newI2, grain)
+        if (Math.abs(rightBoundPoint2.my) > Math.abs(leftBoundPoint2.my)) {
+          if (Math.sign(rightBoundPoint2.my) === Math.sign(leftBoundPoint2.my)) {
+            leftBoundPoint2.my = leftBoundPoint2.my * -1
+          }
+          rightBoundPoint2 = Point('normal', newI2, jOutput2)
+        } else {
+          if (Math.sign(rightBoundPoint2.my) === Math.sign(leftBoundPoint2.my)) {
+            rightBoundPoint2.my = rightBoundPoint2.my * -1
+          }
+          leftBoundPoint2 = Point('normal', newI2, jOutput2)
         }
       }
+      if (newI2 >= dl) {
+        points.addSpecialPoint(Point(funcMsg, newI2, evaluate(f, newI2)))
+      }
+
+      console.log('time inside second backtrack: ' + (performance.now() - ot3))
+      // if (bDi >= dl && bDi <= dr) {
+      //   let fHere = evaluate(f, bDi)
+      //   points.addSpecialPoint(Point(funcMsg, bDi, fHere))
+      //   if (Math.abs(fHere) < 0.01) {
+      //     points.addSpecialPoint(Point('zero', bDi, 0))
+      //   }
+      // }
     } else {
       continuousMinmaxCount = 0
     }
