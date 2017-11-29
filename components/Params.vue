@@ -58,7 +58,7 @@
       <b-form-checkbox id="radio4" @change="toggleShowFTC" v-model="showFTC">Show 1st FTC</b-form-checkbox>
       <!-- <b-form-checkbox id="radio4" @change="toggleGrainInput" v-model="isGrainInputChecked">Input a custom x-step size</b-form-checkbox> -->
       <b-card v-show="showFTC">
-        <h5 v-show="showFTC" :style="{marginTop: '8px'}">FTC Bounds</h5>
+        <h5 v-show="showFTC" :style="{marginTop: '8px'}">1st FTC</h5>
           <p v-show="waitingForFuncFinish" class="nopadding">loading FTC info...</p>
         <div v-show="showFTC && !waitingForFuncFinish">
           <p class="nopadding">F(x) = {{funInput}}</p>

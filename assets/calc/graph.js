@@ -736,8 +736,8 @@ export default function graphFunc (fun, domainLeft, domainRight, rangeBottom, ra
   // show the FTC if required.
   if (graph.ctx.$store.state.showFTC) {
     dPoints.pts = dPoints.pts.filter(point => {
-      return point.mx > graph.ctx.$store.state.domainFTCLeft &&
-        point.mx < graph.ctx.$store.state.domainFTCRight
+      return point.mx > graph.ctx.$store.state.domainLeft &&
+        point.mx < graph.ctx.$store.state.domainRight
     })
     let scaledDpoints = scalePointSet(dPoints, graph)
     graphAreaUnderPoints(graph, scaledDpoints, 'fp')
