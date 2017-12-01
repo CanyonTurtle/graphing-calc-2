@@ -10,6 +10,7 @@ var isNum = function (n) {
 const createStore = () => {
   return new Vuex.Store({
     state: {
+      simpsonsEvaluation: 0,
       showFTC: false,
       grain: 0.01,
       isGrainCustomInput: false,
@@ -35,6 +36,9 @@ const createStore = () => {
       currentTheme: Themes.new
     },
     mutations: {
+      setSimpsons (state, value) {
+        state.simpsonsEvaluation = value
+      },
       boundStatus (state, status) {
         state.isBoundsCorrect = status
       },

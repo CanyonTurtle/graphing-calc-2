@@ -1,4 +1,4 @@
-import { evaluate } from './computations'
+import { evaluate, simpsonsRuleN } from './computations'
 import { getPoints } from './get-points'
 import {
   commitSpecialPointSet,
@@ -110,5 +110,8 @@ export default function graphFunc (fun, domainLeft, domainRight, rangeBottom, ra
     })
     let scaledDpoints = scalePointSet(dPoints, graph)
     graphAreaUnderPoints(graph, scaledDpoints, 'fp')
+
+    // evaluate simpson's rule
+    graph.ctx.$store.commit('setSimpsons', simpsonsRuleN(fun, graph, 3))
   }
 }

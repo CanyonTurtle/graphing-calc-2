@@ -67,6 +67,7 @@
           <p class="nopadding">By 1st FTC, F({{domainInputRight}}) - F({{domainInputLeft}}) = definate integral of f(x) from {{domainInputLeft}} to {{domainInputRight}}</p>
           <p class="nopadding"> ~= {{parseFloat(topVal).toFixed(3)}} - {{parseFloat(bottomVal).toFixed(3)}}</p>
           <p class="nopadding"> = {{parseFloat(topVal - bottomVal).toFixed(3)}}</p>
+          <p class="nopadding"> (simpson's 3/8 rule) = {{parseFloat(simpsons).toFixed(3)}}</p>
         </div>
       </b-card>
     </b-card>
@@ -96,6 +97,9 @@
       }
     },
     computed: {
+      simpsons () {
+        return this.$store.state.simpsonsEvaluation
+      },
       funInput: {
         get () {
           return this.$store.state.funInput
