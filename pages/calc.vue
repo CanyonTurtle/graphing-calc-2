@@ -6,7 +6,7 @@
           <graph></graph>
         </b-col>
         <b-col class="upper-col" md="6">
-          <params></params>
+          <params-2></params-2>
           <point-table></point-table>
         </b-col>
       </b-row>
@@ -17,7 +17,7 @@
 
 <script>
 import Graph from '~/components/Graph.vue'
-import Params from '~/components/Params.vue'
+import Params2 from '~/components/Params2.vue'
 import PointTable from '~/components/PointTable.vue'
 
 export default {
@@ -32,7 +32,7 @@ export default {
   },
   components: {
     Graph,
-    Params,
+    Params2,
     PointTable
   },
   computed: {

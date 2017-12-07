@@ -2,7 +2,6 @@
   <div class="graph"> 
     <div class="graph-area" ref="graphArea" v-bind:style="{ height: graphDynamicHeight + 'px' }">
     </div>
-    <p v-show="false">updated: {{dummyData}}</p>
   </div>
 </template>
 
@@ -34,74 +33,8 @@ export default {
     isDomainValid () {
       return (this.delayDomainLeft < this.delayDomainRight)
     },
-    dummyData () {
-      if (this.$store.state.needsRefreshedGraph) {
-        this.setupGraph()
-        this.$store.commit('refreshedGraph')
-      }
-
-      // left domain anim.
-      // var ctx = this
-
-      // if (this.$store.state.domainLeft === this.delayDomainLeft) {
-      //   this.$store.commit('domainLeftIsZoomed')
-      // }
-
-      // if (!this.$store.state.isDomainLeftZoomed) {
-      //   if (!this.pidLeft) {
-      //     var leftI = 0
-      //     var leftICap = 0.03
-      //     this.pidLeft = setInterval(function () {
-      //       leftI += 0.005 * (ctx.$store.state.domainLeft - ctx.delayDomainLeft)
-      //       leftI = Math.max(leftI, leftICap)
-      //       leftI = Math.min(leftI, leftICap * -1)
-      //       ctx.delayDomainLeft += 0.2 * (ctx.$store.state.domainLeft - ctx.delayDomainLeft) + leftI
-      //       console.log('moving')
-      //       if (Math.abs(ctx.$store.state.domainLeft - ctx.delayDomainLeft) < 0.4) {
-      //         ctx.delayDomainLeft = ctx.$store.state.domainLeft
-      //         console.log('done')
-      //         ctx.$store.commit('domainLeftIsZoomed')
-      //       }
-      //       ctx.setupGraph()
-      //     }, 50)
-      //   }
-      // } else {
-      //   if (this.pidLeft) {
-      //     clearInterval(this.pidLeft)
-      //     this.pidLeft = null
-      //   }
-      // }
-
-      // right domain anim.
-      // if (this.$store.state.domainRight === this.delayDomainRight) {
-      //   this.$store.commit('domainRightIsZoomed')
-      // }
-
-      // if (!this.$store.state.isDomainRightZoomed) {
-      //   if (!this.pidRight) {
-      //     var rightI = 0
-      //     var rightICap = 0.03
-      //     this.pidRight = setInterval(function () {
-      //       rightI += 0.005 * (ctx.$store.state.domainRight - ctx.delayDomainRight)
-      //       rightI = Math.max(rightI, rightICap)
-      //       rightI = Math.min(rightI, rightICap * -1)
-      //       ctx.delayDomainRight += 0.3 * (ctx.$store.state.domainRight - ctx.delayDomainRight) + rightI
-      //       console.log('moving')
-      //       if (Math.abs(ctx.$store.state.domainRight - ctx.delayDomainRight) < 0.4) {
-      //         ctx.delayDomainRight = ctx.$store.state.domainRight
-      //         console.log('done')
-      //         ctx.$store.commit('domainRightIsZoomed')
-      //       }
-      //       ctx.setupGraph()
-      //     }, 50)
-      //   }
-      // } else {
-      //   if (this.pidRight) {
-      //     clearInterval(this.pidRight)
-      //     this.pidRight = null
-      //   }
-      // }
-      return true
+    refreshGraph () {
+      return this.$store.state.needsRefreshedGraph
     }
   },
   methods: {
@@ -123,12 +56,13 @@ export default {
         this.points = this.$store.state.coolPoints
 
         // use instant domain change.
-        let ld = this.$store.state.domainLeft
-        let rd = this.$store.state.domainRight
-        let br = this.$store.state.rangeBottom
-        let tr = this.$store.state.rangeTop
-        console.log(this.$store.state.grain)
-        graphFunc(this.$store.state.funInput, ld, rd, br, tr, this.$store.state.grain, this)
+        // let ld = this.$store.state.domainLeft
+        // let rd = this.$store.state.domainRight
+        // let br = this.$store.state.rangeBottom
+        // let tr = this.$store.state.rangeTop
+        let ipf = this.$store.state.inputForm
+        console.log('REFRESHING')
+        graphFunc(ipf.function, parseFloat(ipf.dl), parseFloat(ipf.dr), parseFloat(ipf.rb), parseFloat(ipf.rt), ipf.showD, ipf.showDD, ipf.autoScaleMaxMin, ipf.showFTC, this.$store.state.grain, this)
       } else {
         this.$store.commit('boundStatus', false)
       }
@@ -137,17 +71,11 @@ export default {
   mounted: function () {
     this.setupGraph()
     window.addEventListener('resize', this.setupGraph)
-    var oldW = 800
     setInterval(() => {
-      try {
-        let newW = this.$refs.graphArea.getBoundingClientRect().width
-        if (newW !== oldW) {
-          // this.setupGraph()
-          oldW = newW
-        }
-      } catch (e) {
+      if (this.$store.state.needsRefreshedGraph) {
+        this.setupGraph()
       }
-    }, 1000)
+    }, 300)
   }
 }
 </script>

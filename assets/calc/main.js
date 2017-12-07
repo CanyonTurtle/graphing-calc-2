@@ -1,4 +1,4 @@
-import { evaluate, simpsonsRuleN } from './computations'
+import { evaluate, derive, simpsonsRuleN } from './computations'
 import { getPoints } from './get-points'
 import {
   commitSpecialPointSet,
@@ -9,9 +9,19 @@ import {
   graphAreaUnderPoints
 } from './render-graph'
 import { getGraphState } from './setup-graph'
+import { validateInputForm } from './validate'
 
 // the entry point of the graphing function
-export default function graphFunc (fun, domainLeft, domainRight, rangeBottom, rangeTop, grain, ctx) {
+export default function graphFunc (fun, domainLeft, domainRight, rangeBottom, rangeTop, isDerivativeChecked, isSecondDerivativeChecked, autoScaleMaxMin, showFTC, grain, ctx) {
+  console.log(domainLeft)
+  console.log(domainRight)
+  ctx.$store.commit('graphRefreshing')
+  ctx.$store.commit('funcStatus', {
+    isLoading: true,
+    isLoadingFTC: true,
+    isCorrect: true,
+    errorMsg: null
+  })
   // Capital X goes to x
   fun = fun.split('').map(char => {
     if (char === 'X') {
@@ -21,6 +31,30 @@ export default function graphFunc (fun, domainLeft, domainRight, rangeBottom, ra
   }).join('')
 
   // validate the input - ensure that the function
+  try {
+    validateInputForm({
+      function: fun,
+      dl: domainLeft,
+      dr: domainRight,
+      rb: rangeBottom,
+      rt: rangeTop,
+      showD: isDerivativeChecked,
+      showDD: isSecondDerivativeChecked,
+      autoScaleMaxMin,
+      showFTC,
+      grain
+    })
+  } catch (err) {
+    console.error(err)
+    ctx.$store.commit('funcStatus', {
+      isLoading: false,
+      isLoadingFTC: false,
+      isCorrect: false,
+      errorMsg: '' + err
+    })
+    return 0
+  }
+
   // is valid by trying it and if it fails, return
   try {
     let testreturn = evaluate(fun, domainLeft)
@@ -28,11 +62,20 @@ export default function graphFunc (fun, domainLeft, domainRight, rangeBottom, ra
       return 0
     }
   } catch (er) {
-    ctx.$store.commit('funcStatus', false)
+    ctx.$store.commit('funcStatus', {
+      isLoading: false,
+      isLoadingFTC: false,
+      isCorrect: false,
+      errorMsg: 'failed to render.'
+    })
     return 0
   }
   ctx.$store.commit('boundStatus', true)
-  ctx.$store.commit('funcStatus', true)
+  console.log('setting  functino staus')
+  ctx.$store.commit('funcStatus', {
+    isLoading: true,
+    isCorrect: true
+  })
 
   // if the domains aren't right, stop
   if (domainLeft >= domainRight) {
@@ -40,7 +83,7 @@ export default function graphFunc (fun, domainLeft, domainRight, rangeBottom, ra
   }
 
   // get the basic information about the graph.
-  let graph = getGraphState(ctx, fun, domainLeft, domainRight, rangeTop, rangeBottom, grain)
+  let graph = getGraphState(ctx, fun, domainLeft, domainRight, rangeBottom, rangeTop, isDerivativeChecked, isSecondDerivativeChecked, autoScaleMaxMin, showFTC, grain)
 
   // I - III ----- originalPoints = getPoints(function)
   let { originalPoints, dPoints, sDPoints } = getPoints(' ' + fun, graph, 'f')
@@ -49,10 +92,10 @@ export default function graphFunc (fun, domainLeft, domainRight, rangeBottom, ra
   // get maximum y value.
   var consideredPointsList = []
   consideredPointsList.push(originalPoints)
-  if (ctx.$store.state.isDerivativeChecked) {
+  if (isDerivativeChecked) {
     consideredPointsList.push(dPoints)
   }
-  if (ctx.$store.state.isSecondDerivativeChecked) {
+  if (isSecondDerivativeChecked) {
     consideredPointsList.push(sDPoints)
   }
   let globalMaxY = Math.max(...(consideredPointsList.map(ps => ps.maxYV)))
@@ -68,9 +111,9 @@ export default function graphFunc (fun, domainLeft, domainRight, rangeBottom, ra
 
   // if the autoscale is on, the graph is reset with new size.
   // this alters thew view scaling for the rendering later.
-  if (ctx.$store.state.autoScaleYMaxMin) {
+  if (autoScaleMaxMin) {
     // get the basic information about the graph.
-    graph = getGraphState(ctx, fun, domainLeft, domainRight, globalMaxY, globalMinY, grain)
+    graph = getGraphState(ctx, fun, domainLeft, domainRight, globalMinY, globalMaxY, isDerivativeChecked, isSecondDerivativeChecked, autoScaleMaxMin, showFTC, grain)
   }
 
   // V ----- render the graph axis and numbers.
@@ -82,14 +125,14 @@ export default function graphFunc (fun, domainLeft, domainRight, rangeBottom, ra
   graphPointSetSpecialPoints(graph, scaledOpoints, 'f')
 
   // VI ---- render derivaive points
-  if (ctx.$store.state.isDerivativeChecked) {
+  if (isDerivativeChecked) {
     let scaledDpoints = scalePointSet(dPoints, graph)
     graphPointSetNormalPoints(graph, scaledDpoints, 'fp')
     graphPointSetSpecialPoints(graph, scaledDpoints, 'fp')
   }
 
   // VII --- render second derivative Points
-  if (ctx.$store.state.isSecondDerivativeChecked) {
+  if (isSecondDerivativeChecked) {
     let scaledSDpoints = scalePointSet(sDPoints, graph)
     graphPointSetNormalPoints(graph, scaledSDpoints, 'fpp')
     graphPointSetSpecialPoints(graph, scaledSDpoints, 'fpp')
@@ -101,17 +144,37 @@ export default function graphFunc (fun, domainLeft, domainRight, rangeBottom, ra
   commitSpecialPointSet(graph, dPoints)
   commitSpecialPointSet(graph, sDPoints)
 
+  // say the function is done
+  ctx.$store.commit('funcStatus', {
+    isLoading: false,
+    isLoadingFTC: true,
+    isCorrect: true,
+    errorMsg: null
+  })
+
   // show the FTC if required.
   // only show the correct region
-  if (graph.ctx.$store.state.showFTC) {
+  if (showFTC) {
     dPoints.pts = dPoints.pts.filter(point => {
-      return point.mx > graph.ctx.$store.state.domainLeft &&
-        point.mx < graph.ctx.$store.state.domainRight
+      return point.mx > graph.dl &&
+        point.mx < graph.dr
     })
     let scaledDpoints = scalePointSet(dPoints, graph)
     graphAreaUnderPoints(graph, scaledDpoints, 'fp')
 
     // evaluate simpson's rule
-    graph.ctx.$store.commit('setSimpsons', simpsonsRuleN(fun, graph, 3))
+    graph.ctx.$store.commit('setApproximation', {
+      value: simpsonsRuleN(graph, 3000, (x) => {
+        return derive(fun, x, 0.0001)
+      }),
+      name: 'Rieman Sum'
+    })
   }
+
+  ctx.$store.commit('funcStatus', {
+    isLoading: false,
+    isLoadingFTC: false,
+    isCorrect: true,
+    errorMsg: null
+  })
 }

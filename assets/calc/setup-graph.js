@@ -1,5 +1,5 @@
 // get information about the graph.
-export const getGraphState = function (ctx, fun, dl, dr, rt, rb, grain) {
+export const getGraphState = function (ctx, fun, dl, dr, rb, rt, isDerivativeChecked, isSecondDerivativeChecked, autoScaleMaxMin, showFTC, grain) {
   ctx.$d3.select('svg').remove()
   let graphHtml = ctx.$d3.select('.graph-area')
   let graphBox = ctx.$refs.graphArea.getBoundingClientRect()
@@ -75,6 +75,10 @@ export const getGraphState = function (ctx, fun, dl, dr, rt, rb, grain) {
     viewLengthSize,
     viewHeightSize,
     VIEW_ZOOMOUT_SCALE,
+    isDerivativeChecked,
+    isSecondDerivativeChecked,
+    autoScaleMaxMin,
+    showFTC,
     ...theme,
     grain
   }

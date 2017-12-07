@@ -2,23 +2,10 @@
   <section class="container hype">
     <b-container>
       <div>
-        </br>
-         <b-input-group>
-          <!-- Add-ons -->
-          <b-input-group-addon>
-            f(x)=
-          </b-input-group-addon
-
-          <!-- Main form input -->
-          <b-form-input v-model="$store.state.funInput" type="text"></b-form-input>
-          
-          <!-- Attach Right button Group via slot -->
-          <b-input-group-button slot="right">
-            <nuxt-link to="/calc">
-              <b-btn variant="info" right>Graph!</b-btn>
-            </nuxt-link>
-          </b-input-group-button>
-          </b-input-group>
+        <!-- Attach Right button Group via slot -->
+        <nuxt-link to="/calc">
+          <b-btn variant="info" right>Graph!</b-btn>
+        </nuxt-link>
       </div>
     </b-container>
   </section>

@@ -1,10 +1,11 @@
 import { Point, PointSet } from './data'
-import { evaluate, derive, secondDerive } from './computations'
+import { evaluate, derive, secondDerive, findApproxZeroPointBetween } from './computations'
 
 // input a function string, get back a set of points representing
 // that function's evaluations across the interval.
 // as well as the derivative and second derivative!
-export const getPoints = function (f, {graphSvg, ctx, dl, dr, grain, ...graph}, setting) {
+export const getPoints = function (f, {graphSvg, ctx, dl, dr, grain, isDerivativeChecked, isSecondDerivativeChecked, ...graph}, setting) {
+  console.log('left: ' + dl + ' right: ' + dr)
   var pointSets = {
     originalPoints: null,
     dPoints: null,
@@ -71,10 +72,10 @@ export const getPoints = function (f, {graphSvg, ctx, dl, dr, grain, ...graph}, 
     // check for mins or maxes.
     var checkMinMaxList = []
     checkMinMaxList.push(iOutput)
-    if (ctx.$store.state.isDerivativeChecked) {
+    if (isDerivativeChecked) {
       checkMinMaxList.push(iSlope)
     }
-    if (ctx.$store.state.isSecondDerivativeChecked) {
+    if (isSecondDerivativeChecked) {
       checkMinMaxList.push(iSlopeSlope)
     }
 
@@ -96,32 +97,12 @@ export const getPoints = function (f, {graphSvg, ctx, dl, dr, grain, ...graph}, 
       // to continuously approach the zero.
       var rightBoundPoint = Point('normal', i, iOutput)
       var leftBoundPoint = JSON.parse(JSON.stringify(points.pts[points.pts.length - 2]))
-      var jOutput = 1
-      var newI = i
-      let j = 0
-      while (j < 10 && Math.abs(jOutput) > 0.001) {
-        j++
-        newI = (rightBoundPoint.mx + leftBoundPoint.mx) / 2
-        jOutput = evaluate(f, newI)
 
-        // whichever point is furthest gets replaced by the found average, so the algorithm converges on 0
-        if (Math.abs(rightBoundPoint.my) > Math.abs(leftBoundPoint.my)) {
-          // ensure 0 is in the middle
-          if (Math.sign(rightBoundPoint.my) === Math.sign(leftBoundPoint.my)) {
-            leftBoundPoint.my = leftBoundPoint.my * -1
-          }
-          rightBoundPoint = Point('normal', newI, jOutput)
-        } else {
-          // ensure 0 is in the middle
-          if (Math.sign(rightBoundPoint.my) === Math.sign(leftBoundPoint.my)) {
-            rightBoundPoint.my = rightBoundPoint.my * -1
-          }
-          leftBoundPoint = Point('normal', newI, jOutput)
-        }
-      }
-      if (newI >= dl && newI <= dr) {
-        // only add special point if on domain
-        points.addSpecialPoint(Point('zero', newI, jOutput))
+      let zeroPoint = findApproxZeroPointBetween(leftBoundPoint.mx, rightBoundPoint.mx, dl, dr, (x) => {
+        return evaluate(f, x)
+      })
+      if (zeroPoint) {
+        points.addSpecialPoint(zeroPoint)
       }
     }
     oldSign = newSign
@@ -158,28 +139,15 @@ export const getPoints = function (f, {graphSvg, ctx, dl, dr, grain, ...graph}, 
       // same deal: iteratively average the points on either side of the min/max.
       var rightBoundPoint2 = Point('normal', i, iSlope)
       var leftBoundPoint2 = JSON.parse(JSON.stringify(dpts.pts[dpts.pts.length - 2]))
-      var jOutput2 = 1
-      var newI2 = i
-      let j2 = 0
-      while (j2 < 20 && Math.abs(jOutput2) > 0.001) {
-        j2++
-        newI2 = (rightBoundPoint2.mx + leftBoundPoint2.mx) / 2
-        jOutput2 = derive(f, newI2, grain)
-        if (Math.abs(rightBoundPoint2.my) > Math.abs(leftBoundPoint2.my)) {
-          if (Math.sign(rightBoundPoint2.my) === Math.sign(leftBoundPoint2.my)) {
-            leftBoundPoint2.my = leftBoundPoint2.my * -1
-          }
-          rightBoundPoint2 = Point('normal', newI2, jOutput2)
-        } else {
-          if (Math.sign(rightBoundPoint2.my) === Math.sign(leftBoundPoint2.my)) {
-            rightBoundPoint2.my = rightBoundPoint2.my * -1
-          }
-          leftBoundPoint2 = Point('normal', newI2, jOutput2)
-        }
-      }
-      // add the special point
-      if (newI2 >= dl && newI2 <= dr) {
-        points.addSpecialPoint(Point(funcMsg, newI2, evaluate(f, newI2)))
+
+      let minMaxPoint = findApproxZeroPointBetween(leftBoundPoint2.mx, rightBoundPoint2.mx, dl, dr, (x) => {
+        return derive(f, x, grain)
+      })
+
+      // TODO CONVERT to points.
+      if (minMaxPoint && minMaxPoint.mx >= dl && minMaxPoint.mx <= dr) {
+        let newI2 = evaluate(f, minMaxPoint.mx)
+        points.addSpecialPoint(Point(funcMsg, minMaxPoint.mx, newI2))
         // SPECIAL ZERO IDENTIFICATION LOGIC
         // helps when a zero doesn't cross the axis.
         if (Math.abs(evaluate(f, newI2)) < 0.01) {
@@ -202,30 +170,20 @@ export const getPoints = function (f, {graphSvg, ctx, dl, dr, grain, ...graph}, 
       if (contiguousInflectionCount > 5) {
         dontShowInflectionPts = true
       }
+
+      // run the zero approximator to find inflection points.
       var rightBoundPoint3 = Point('normal', i, iSlopeSlope)
       var leftBoundPoint3 = JSON.parse(JSON.stringify(sdpts.pts[sdpts.pts.length - 2]))
-      var jOutput3 = 1
-      var newI3 = i
-      let j3 = 0
-      while (j3 < 20 && Math.abs(jOutput3) > 0.001) {
-        j3++
-        newI3 = (rightBoundPoint3.mx + leftBoundPoint3.mx) / 2
-        jOutput3 = secondDerive(f, newI3, grain)
-        if (Math.abs(rightBoundPoint3.my) > Math.abs(leftBoundPoint3.my)) {
-          if (Math.sign(rightBoundPoint3.my) === Math.sign(leftBoundPoint3.my)) {
-            leftBoundPoint3.my = leftBoundPoint3.my * -1
-          }
-          rightBoundPoint3 = Point('normal', newI3, jOutput3)
-        } else {
-          if (Math.sign(rightBoundPoint3.my) === Math.sign(leftBoundPoint3.my)) {
-            rightBoundPoint3.my = rightBoundPoint3.my * -1
-          }
-          leftBoundPoint3 = Point('normal', newI3, jOutput3)
+      let infPoint = findApproxZeroPointBetween(leftBoundPoint3.mx, rightBoundPoint3.mx, dl, dr, (x) => {
+        return secondDerive(f, x, grain)
+      })
+
+      if (infPoint !== null) {
+        let newI3 = infPoint.mx
+        if (newI3 >= dl && newI3 <= dr) {
+          // add the special point.
+          points.addSpecialPoint(Point('inflectionpt', newI3, evaluate(f, newI3)))
         }
-      }
-      if (newI3 >= dl && newI3 <= dr) {
-        // add the special point.
-        points.addSpecialPoint(Point('inflectionpt', newI3, evaluate(f, newI3)))
       }
     } else {
       // reset if the second derivative changes.

@@ -1,4 +1,5 @@
 import math from 'mathjs'
+import { Point } from './data'
 
 // math evaluation dependence.
 var parser = math.parser()
@@ -28,23 +29,64 @@ export const simpsonsRule = function (f, {dl, dr}) {
 }
 
 // INTEGRAL APPROXIMATION
-export const simpsonsRuleN = function (f, {dl, dr}, s) {
-  let GRAIN = 0.001
-  let n = s * 3
+export const simpsonsRuleN = function ({dl, dr}, n, evaluator) {
   let h = (dr - dl) / n
   var sum = 0
 
-  sum += derive(f, dl, GRAIN)
-  for (let i = 0; i < s; i++) {
+  sum += evaluator(dl)
+  for (let i = 0; i <= n; i += 1) {
     let xi = dl + i * h
-    sum += 3 * derive(f, xi, GRAIN)
-    xi += h
-    sum += 3 * derive(f, xi, GRAIN)
-    xi += h
-    sum += 2 * derive(f, xi, GRAIN)
+    var coef = (i % 2 === 0) ? 4 : 2
+    coef = (i === 0 || i === n) ? 1 : coef
+    sum += coef * evaluator(xi)
   }
-  sum += derive(f, dr, GRAIN)
-  sum *= 3 * h / 8
+  sum *= h / 3
 
   return sum
+}
+
+// INTEGRAL APPROXIMATION
+export const riemanSum = function ({dl, dr}, n, evaluator) {
+  var i = dl
+  var grain = (dr - dl / n)
+  var area = 0
+  while (i < dr) {
+    let rectangle = grain * evaluator(i)
+    area += rectangle
+    i += grain
+  }
+  return area
+}
+
+// zero finder
+export const findApproxZeroPointBetween = function (xl, xr, dl, dr, evaluator) {
+  var rightBoundPoint = Point('normal', xr, evaluator(xr))
+  var leftBoundPoint = Point('normal', xl, evaluator(xl))
+  var jOutput = 1
+  var newI = xr
+  let j = 0
+  while (j < 10 && Math.abs(jOutput) > 0.001) {
+    j++
+    newI = (rightBoundPoint.mx + leftBoundPoint.mx) / 2
+    jOutput = evaluator(newI)
+    // whichever point is furthest gets replaced by the found average, so the algorithm converges on 0
+    if (Math.abs(rightBoundPoint.my) > Math.abs(leftBoundPoint.my)) {
+      // ensure 0 is in the middle
+      if (Math.sign(rightBoundPoint.my) === Math.sign(leftBoundPoint.my)) {
+        leftBoundPoint.my = leftBoundPoint.my * -1
+      }
+      rightBoundPoint = Point('normal', newI, jOutput)
+    } else {
+      // ensure 0 is in the middle
+      if (Math.sign(rightBoundPoint.my) === Math.sign(leftBoundPoint.my)) {
+        rightBoundPoint.my = rightBoundPoint.my * -1
+      }
+      leftBoundPoint = Point('normal', newI, jOutput)
+    }
+  }
+  if (newI >= dl && newI <= dr) {
+    // only add special point if on domain
+    return Point('zero', newI, jOutput)
+  }
+  return null
 }
