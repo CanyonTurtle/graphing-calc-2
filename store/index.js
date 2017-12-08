@@ -29,6 +29,7 @@ const createStore = () => {
       },
       functionStatus: {
         isLoading: true,
+        isLoadingFTC: true,
         isCorrect: true,
         errorMsg: null
       },

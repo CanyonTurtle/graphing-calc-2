@@ -70,7 +70,7 @@ export default {
   },
   mounted: function () {
     this.setupGraph()
-    window.addEventListener('resize', this.setupGraph)
+    // window.addEventListener('resize', this.setupGraph)
     setInterval(() => {
       if (this.$store.state.needsRefreshedGraph) {
         this.setupGraph()
