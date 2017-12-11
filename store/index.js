@@ -25,7 +25,10 @@ const createStore = () => {
         showD: true,
         showDD: true,
         showFTC: false,
-        autoScaleMaxMin: true
+        autoScaleMaxMin: true,
+        rationalMode: false,
+        rationalFunctionTop: 'x + 1',
+        rationalFunctionBottom: 'x - 1'
       },
       functionStatus: {
         isLoading: true,

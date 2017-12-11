@@ -3,7 +3,8 @@
     <div>
       <!-- the function -->
       <div v-if="!justRenderedGraph">
-        <b-input-group id="exampleInputGroup1"
+        <!-- functions that are default - not rational expressions -->
+        <b-input-group v-if="!inputForm.rationalMode" id="exampleInputGroup1"
                       label="Function:"
                       left="f(x)=">
           <b-form-input id="exampleInput1"
@@ -13,7 +14,30 @@
                       placeholder="enter function">
           </b-form-input>
         </b-input-group>
-        <!-- checkboxes -->
+
+        <!-- rational expressions -->
+        <b-input-group v-if="inputForm.rationalMode" id="exampleInputGroup1"
+                      label="Function:"
+                      left="p(x)=">
+          <b-form-input id="exampleInput1"
+                      type="text"
+                      v-model="inputForm.rationalFunctionTop"
+                      required
+                      placeholder="enter function">
+          </b-form-input>
+        </b-input-group>
+        <b-input-group v-if="inputForm.rationalMode" id="exampleInputGroup1"
+                      label="Function:"
+                      left="q(x)=">
+          <b-form-input id="exampleInput1"
+                      type="text"
+                      v-model="inputForm.rationalFunctionBottom"
+                      required
+                      placeholder="enter function">
+          </b-form-input>
+        </b-input-group>
+
+        <!-- boundary inputs -->
         <b-row no-gutters>
           <b-col>
             <b-input-group left="x in [">
@@ -38,6 +62,8 @@
             </b-input-group>
           </b-col>
         </b-row>
+
+        <!-- checkboxes -->
         <b-card>
           <b-form-group id="exampleGroup5">
             <b-form-checkbox v-model="inputForm.showD" id="exampleInput4">
@@ -48,6 +74,7 @@
             </b-form-checkbox>
             <b-form-checkbox id="radio3" v-model="inputForm.autoScaleMaxMin">Auto-scale x / y bounds</b-form-checkbox>
             <b-form-checkbox id="radio3" v-model="inputForm.showFTC">show FTC</b-form-checkbox>
+            <b-form-checkbox id="radio4" v-model="inputForm.rationalMode">rational mode</b-form-checkbox>
           </b-form-group>
         </b-card>
         <b-button block type="button" @click="onSubmit" variant="info">Graph!</b-button>
@@ -57,7 +84,10 @@
         </div>
       </div>
     </div>
+
+    <!-- error messages for the user -->
     <p class="error-function" v-show="status.errorMsg !== null">{{status.errorMsg}}</p>
+
     <!-- the part that explains the FTC -->
     <b-card v-show="inputForm.showFTC && justRenderedGraph">
       <h5 :style="{marginTop: '8px'}">1st FTC</h5>

@@ -62,7 +62,7 @@ export default {
         // let tr = this.$store.state.rangeTop
         let ipf = this.$store.state.inputForm
         console.log('REFRESHING')
-        graphFunc(ipf.function, parseFloat(ipf.dl), parseFloat(ipf.dr), parseFloat(ipf.rb), parseFloat(ipf.rt), ipf.showD, ipf.showDD, ipf.autoScaleMaxMin, ipf.showFTC, this.$store.state.grain, this)
+        graphFunc(ipf.function, ipf.rationalFunctionTop, ipf.rationalFunctionBottom, parseFloat(ipf.dl), parseFloat(ipf.dr), parseFloat(ipf.rb), parseFloat(ipf.rt), ipf.showD, ipf.showDD, ipf.autoScaleMaxMin, ipf.showFTC, ipf.rationalMode, this.$store.state.grain, this)
       } else {
         this.$store.commit('boundStatus', false)
       }
