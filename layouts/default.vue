@@ -4,7 +4,7 @@
       <meta name="viewport" content="width=device-width, initial-scale=1">
     </head>
     <div class="top" :style="{ backgroundColor: topBarCol } ">
-      <h3 class="title" :style="{ color: titleCol }">GRAPHING CALC!</h3>
+      <h3 class="title" :style="{ color: titleCol }">GRAPH YOUR FUNCTION</h3>
       <p class="dividerboi">
         <nuxt-link class="linkboi" to="/calc">try</nuxt-link>
         <nuxt-link class="linkboi" to="/docs">learn</nuxt-link>
@@ -58,7 +58,9 @@ export default {
   background-color: #39CCCC;
   padding: 10px;
   color: #000000;
-  background-image: linear-gradient(135deg, #5EFCE8 0%, #736EFE 100%)
+  background: #ff5f6d; /* fallback for old browsers */
+  background: -webkit-linear-gradient(to right, #ff5f6d, #ffc371); /* Chrome 10-25, Safari 5.1-6 */
+  background: linear-gradient(to right, #ff5f6d, #ffc371); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
 }
 
 .dividerboi {
