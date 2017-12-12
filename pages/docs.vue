@@ -12,9 +12,11 @@
             to everyone.
           </p>
           <h4 class="contentheader">Features</h4>
-          <li>Graph a function in terms of x</li>
-          <li>Derivative and 2nd Derivative</li>
-          <li>Approximate features of graph (zeros, extrema, inflection points)</li>
+          <ul>
+            <li>Graph a function in terms of x</li>
+            <li>Derivative and 2nd Derivative</li>
+            <li>Approximate features of graph (zeros, extrema, inflection points)</li>
+          </ul>
         </b-tab>
         <b-tab title="Planning" >
           <h4 class="contentheader">Making The Plan</h4>
@@ -30,12 +32,14 @@
             graphing calculator was chosen to be a web application,
             which allows several benefits as a whole:
           </p>
-          <li> Use of familiar technologies</li>
-          <li> Easy prototyping with a development server </li>
-          <li> Ecosystem benefits of NPM for finding graphing libraries, etc...</li>
-          <li> Multi-platform (just a website).</li>
+          <ul>
+            <li> Use of the familiar <a href="https://vuejs.org">Vue.js</a> framework.</li>
+            <li> Easy prototyping with a development server </li>
+            <li> Ecosystem benefits of NPM for finding graphing libraries, etc...</li>
+            <li> Multi-platform (just a website).</li>
+          </ul>
           <br>
-          <h4 class="contentheader">Choosing The Technologies</h4>
+          <h4 class="contentheader">Choosing The Technology Stack</h4>
           <p>
             For scaffolding the frontend, <a href="https://nuxtjs.org">nuxt.js</a> was chosen because 
             it allows static site generation along with integrating the
@@ -50,8 +54,10 @@
           <p>
             This application was designed to be:
           </p>
-          <li>Responsive to user interation</li>
-          <li>Adaptive to differing screen sizes</li>
+          <ul>
+            <li>Responsive to user interation</li>
+            <li>Adaptive to differing screen sizes</li>
+          </ul>
           <p>
              In order to achieve responsive screen size, <a href='https://boostrap-vue.js.org'>Bootstrap Vue</a>
             was used as a style framework. this allowed for fast construction of UI components that adjust the layout according to screen size.
@@ -59,14 +65,16 @@
           <p>
             the responsiveness, as far as re-rendering the graph when user input is changed, follows like this:
           </p>
-          <li>Input is changed in one of the fields (function, domain, etc...)</li>
-          <li>An event is emmited to the <a href='store link'>store</a> which signals that the input changed</li>
-          <li>The store handles the input change, and makes sure the input is valid (proper domain, is a number, etc...)</li>
-          <li>If the input is valid, the graph is signaled to be re-rendered and all input errors are cleared. If not, an error message is toggled for the user.</li>
+          <ul>
+            <li>Input is changed in one of the fields (function, domain, etc...)</li>
+            <li>An event is emmited to the <a href='store link'>store</a> which signals that the input changed</li>
+            <li>The store handles the input change, and makes sure the input is valid (proper domain, is a number, etc...)</li>
+            <li>If the input is valid, the graph is signaled to be re-rendered and all input errors are cleared. If not, an error message is toggled for the user.</li>
+          </ul>
           <br>
         </b-tab>
         <b-tab title="Algorithms">
-          <br>Algorithms
+          <h4 class="contentheader">Algorithms</h4>
           <p>
             Graphing a function:
           </p>
@@ -85,7 +93,9 @@
           <br>
         </b-tab>
         <b-tab title="Deployment">
-          <br>Algorithms tab!
+          <h4 class="contentheader">Deployement</h4>
+          <p>This project is hosted through <a href="https://www.netlify.com/">Netlify</a>, a service that hosts static websites.</p>
+          <p>the project is compiled into static websites using the <a href="https://nuxtjs.org">nuxt.js</a> framework, and the deployed sites are hosted in the dist folder.</p>
         </b-tab>
       </b-tabs>
     </b-container>

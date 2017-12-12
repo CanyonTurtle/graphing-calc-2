@@ -20,7 +20,7 @@ module.exports = {
   */
   loading: { color: '#000000' },
   /*
-  ** Build configuration
+  ** Build configuraion
   */
   build: {
     /*

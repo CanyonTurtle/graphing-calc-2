@@ -15,6 +15,7 @@
 import Logo from '~/components/Logo.vue'
 
 export default {
+  middleware: 'to-calculator',
   layout (ctx) {
     return 'default'
   },

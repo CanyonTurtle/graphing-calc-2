@@ -27,6 +27,7 @@
         </b-row>
       </b-card>
       </br>
+      <!-- Place this tag where you want the button to render. -->
       <router-link to="/docs">Learn about the project!</router-link>
     </b-container>
   </div>

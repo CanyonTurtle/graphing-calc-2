@@ -5,11 +5,9 @@
     </head>
     <div class="top" :style="{ backgroundColor: topBarCol } ">
       <h3 class="title" :style="{ color: titleCol }">GRAPH YOUR FUNCTION</h3>
-      <p class="dividerboi">
-        <nuxt-link class="linkboi" to="/calc">try</nuxt-link>
-        <nuxt-link class="linkboi" to="/docs">learn</nuxt-link>
-        <nuxt-link class="linkboi" to="/credits">credits</nuxt-link>
-      </p>
+      <nuxt-link class="linkboi" to="/calc"><b-button :size="'sm'" :variant="'outline-primary'">try</b-button></nuxt-link>
+      <nuxt-link class="linkboi" to="/docs"><b-button :size="'sm'" :variant="'outline-primary'">learn</b-button></nuxt-link>
+      <nuxt-link class="linkboi" to="/credits"><b-button :size="'sm'" :variant="'outline-primary'">credits</b-button></nuxt-link>
     </div>
     <div>
       <transition name="fade">
