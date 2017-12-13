@@ -20,9 +20,11 @@
             </b-dropdown> -->
           </b-col>
           <b-col>
-            <i>other</i></br>
+            <i>logic</i></br>
             <a href="http://mathjs.org/">Math.js</a></br>
-            <a href="https://www.netlify.com/">Netlify</a>
+            <i>creation tools</i></br>
+            <a href="https://www.netlify.com/">Netlify</a></br>
+            <a href="https://www.lucidchart.com/">Lucidcharts</a>
           </b-col>
         </b-row>
       </b-card>

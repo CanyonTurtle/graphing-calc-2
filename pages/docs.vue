@@ -75,22 +75,10 @@
         </b-tab>
         <b-tab title="Algorithms">
           <h4 class="contentheader">Algorithms</h4>
-          <p>
-            Graphing a function:
-          </p>
-          <li>start the x-value at the left domain</li>
-          <li>
-            keep going until the x-value reaches the right domain value: 
-            <ul>
-              <li>evaluate the point at the current x-value, add to the list of points</li>
-              <li>if the sign of the y-value is different than last time, there might be a zero:</li>
-            </ul>
-          </li>
-          <li>pass the points to the graphing function and put them on the graph</li>
-          <li>An event is emmited to the <a href='store link'>store</a> which signals that the input changed</li>
-          <li>The store handles the input change, and makes sure the input is valid (proper domain, is a number, etc...)</li>
-          <li>If the input is valid, the graph is signaled to be re-rendered and all input errors are cleared. If not, an error message is toggled for the user.</li>
-          <br>
+          <p>These algorithms capture the essence of the actual logic in use. Read all of the logic here on <a href="https://github.com/CanyonTurtle/graphing-calc-2/tree/master/assets/calc">Github!</a></p>
+          <img class="imgwidth" src="~/assets/img/integration.png" alt="image not found.">
+          <img class="imgwidth" src="~/assets/img/derivation.png" alt="image not found.">
+          <img class="imgwidth" src="~/assets/img/ftc.png" alt="image not found.">
         </b-tab>
         <b-tab title="Deployment">
           <h4 class="contentheader">Deployement</h4>
@@ -122,6 +110,9 @@ export default {
 }
 .tabzz {
   text-align: left;
+}
+.imgwidth {
+  width: 100%;
 }
 </style>
 
