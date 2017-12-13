@@ -11,14 +11,14 @@
             intuitive graphing calculator that is accessable
             to everyone.
           </p>
-          <h4 class="contentheader">Features</h4>
+          <h5 class="contentheader">Features</h5>
           <ul>
             <li>Graph a function in terms of x</li>
             <li>Derivative and 2nd Derivative</li>
             <li>Approximate features of graph (zeros, extrema, inflection points)</li>
+            <li>A special mode to handle rational functions</li>
+            <li>Display the 1st FTC on a derivative graph, with an approximation function to verify the 1st FTC</li>
           </ul>
-        </b-tab>
-        <b-tab title="Planning" >
           <h4 class="contentheader">Making The Plan</h4>
           <p>
             Before starting, the
@@ -47,8 +47,6 @@
           </p>
           <p> The data graphing library, <a href="">Vue-d3</a>, was chosen after the main technologies were picked.</p>
 
-        </b-tab>
-        <b-tab title="UX">
           <h4 class="contentheader">User Experience</h4>
           <br>
           <p>
@@ -76,14 +74,24 @@
         <b-tab title="Algorithms">
           <h4 class="contentheader">Algorithms</h4>
           <p>These algorithms capture the essence of the actual logic in use. Read all of the logic here on <a href="https://github.com/CanyonTurtle/graphing-calc-2/tree/master/assets/calc">Github!</a></p>
+          <h5>Integration</h5>
+          <p>The integration process is done using Simpson's Nth rule.</p>
           <img class="imgwidth" src="~/assets/img/integration.png" alt="image not found.">
+          <h5>Derivation</h5>
+          <p>This is a simple difference-quotient, or, rise / run formula.</p>
           <img class="imgwidth" src="~/assets/img/derivation.png" alt="image not found.">
+          <h5>FTC</h5>
+          <p>This verifies the first FTC by using the integration formula and then evaluating the original function at the right and left endpoints.</p>
           <img class="imgwidth" src="~/assets/img/ftc.png" alt="image not found.">
+          <h5>Special Points: Zeroes, Inflection points, Extrema</h5>
+          <p>This process will find the approximate x-values at places where y-values are 0. This is run where there are sign changes in the graph, with X left and X right corresponding to before and after the sign change.</p>
+          <p>For scenarios where a function hits 0 but does not change signs, the derivative of the function is examined to make sure the point is not overlooked.</p>
+          <img class="imgwidth" src="~/assets/img/point-finder.png" alt="image not found.">
         </b-tab>
         <b-tab title="Deployment">
-          <h4 class="contentheader">Deployement</h4>
+          <h4 class="contentheader">Deployment</h4>
           <p>This project is hosted through <a href="https://www.netlify.com/">Netlify</a>, a service that hosts static websites.</p>
-          <p>the project is compiled into static websites using the <a href="https://nuxtjs.org">nuxt.js</a> framework, and the deployed sites are hosted in the dist folder.</p>
+          <p>The project is compiled into static websites using the <a href="https://nuxtjs.org">nuxt.js</a> framework, and the deployed sites are hosted in the dist folder.</p>
         </b-tab>
       </b-tabs>
     </b-container>
@@ -113,6 +121,16 @@ export default {
 }
 .imgwidth {
   width: 100%;
+}
+
+h3 {
+  color: #ff9f1c;
+}
+h4 {
+  color: #e71d36;
+}
+h5 {
+  color: #2ec4b6;
 }
 </style>
 
