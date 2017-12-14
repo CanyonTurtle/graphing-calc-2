@@ -6,19 +6,47 @@
       <b-tabs class="tabzz" justified>
         <b-tab title="Intro" active>
           <h4 class="contentheader">What is this?</h4>
-          <p>
+          <p class="nopaddingbottom">
             The purpose of this graphing calculator is to provide a
             intuitive graphing calculator that is accessable
             to everyone.
           </p>
           <h5 class="contentheader">Features</h5>
-          <ul>
-            <li>Graph a function in terms of x</li>
-            <li>Derivative and 2nd Derivative</li>
-            <li>Approximate features of graph (zeros, extrema, inflection points)</li>
-            <li>A special mode to handle rational functions</li>
-            <li>Display the 1st FTC on a derivative graph, with an approximation function to verify the 1st FTC</li>
-          </ul>
+          <ol>
+            <li>
+              <p class="nopaddingbottom">Graph ANY polynomial rational expression (with rational mode)</p>
+              <ul>
+                <li>Clearly highlight removable discontinuities</li>
+              </ul>
+            </li>
+            <li>
+              <p class="nopaddingbottom">Graph ANY polynomial polynomial function</p>
+              <ul>
+                <li>Graph the first derivative</li>
+                <li>Graph the second derivative</li>
+                <li>Use colored markers to find points of relative max/min</li>
+                <li>Use colored markers to find points of inflection</li>
+              </ul>
+            </li>
+            <li>
+              <p class="nopaddingbottom">Graph logarithmic (log), trigonometric (sin, cos, tan), or exponential function</p>
+              <ul>
+                <li>Graph the first derivative</li>
+                <li>Graph the second derivative</li>
+                <li>Use colored markers to find points of relative max/min</li>
+                <li>Use colored markers to find points of inflection</li>
+              </ul>
+            </li>
+            <li>
+              <p>Given any f'(x) accurately show the fundamental theorem of calculus for any two values on the given domain.</p>
+            </li>
+            <li>
+              <p>Software block diagram and code with COMMENTS (see Algorithms tab).</p>
+            </li>
+            <li>
+              <p>Professional Presentation (this site's Learn section).</p>
+            </li>
+          </ol>
           <h4 class="contentheader">Making The Plan</h4>
           <p>
             Before starting, the
@@ -131,6 +159,14 @@ h4 {
 }
 h5 {
   color: #2ec4b6;
+}
+p {
+  padding-bottom: 0px;
+  margin-bottom: 0px;
+}
+
+ul{
+  padding-bottom: 10px;
 }
 </style>
 
