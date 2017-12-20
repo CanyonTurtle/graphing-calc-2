@@ -95,11 +95,29 @@
       <div v-show="inputForm.showFTC && !isLoadingFTC">
         <p class="nopadding">F(x) = {{inputForm.function}}</p>
         <p class="nopadding">f(x) = F'(x) in red on graph</p>
-        <p class="nopadding">if f(x) is continuous on the closed interval [{{inputForm.dl}}, {{inputForm.dr}}], then</p>
-        <p class="nopadding">By 1st FTC, F({{inputForm.dr}}) - F({{inputForm.dl}}) = definate integral of f(x) from {{inputForm.dl}} to {{inputForm.dr}}</p>
-        <p class="nopadding"> ~= {{parseFloat(topVal).toFixed(3)}} - {{parseFloat(bottomVal).toFixed(3)}}</p>
-        <p class="nopadding"> = {{parseFloat(topVal - bottomVal).toFixed(3)}}</p>
-        <p class="nopadding"> ({{$store.state.approximation.name}}): {{parseFloat($store.state.approximation.value).toFixed(3)}}</p>
+        <p class="nopadding"> let a = {{inputForm.dl}}</p>
+        <p class="nopadding"> let b = {{inputForm.dr}}</p>
+        <p class="nopadding">if f(x) is continuous on the closed interval [{{inputForm.dl}}, {{inputForm.dr}}], then by 1st FTC,</p>
+        <div lang="latex">
+          \\int_{a}^{b}f(x)dx = F(b) - F(a)
+        </div>
+        <b-row>
+          <b-col xs="4">
+            <p class="nopadding">Antiderivative Evaluation</p>
+          </b-col>
+          <b-col xs="8">
+            <p class="nopadding"> ~= {{parseFloat(topVal).toFixed(3)}} - {{parseFloat(bottomVal).toFixed(3)}}</p>
+            <p class="nopadding"> = {{parseFloat(topVal - bottomVal).toFixed(3)}}</p>
+          </b-col>
+        </b-row>
+        <b-row>
+          <b-col xs="4">
+            <p class="nopadding">{{$store.state.approximation.name}} Approximation</p>
+          </b-col>
+          <b-col xs="8">
+            <p class="nopadding">{{parseFloat($store.state.approximation.value).toFixed(3)}}</p>
+          </b-col>
+        </b-row>
       </div>
     </b-card>
     <b-card v-if="justRenderedGraph">
@@ -177,4 +195,8 @@ export default {
 .error-function {
   color: #ff0000;
 }  
+.nopadding {
+  padding: 2px;
+  margin: 2px;
+}
 </style>
