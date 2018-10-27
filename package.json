@@ -16,13 +16,13 @@
     "bootstrap": "^4.0.0-beta.2",
     "bootstrap-vue": "^1.0.2",
     "mathjs": "^3.16.5",
-    "nuxt": "^1.0.0-rc11",
+    "nuxt": "^2.2.0",
     "vue-d3": "^0.1.0",
     "vue-directive-tooltip": "^1.4.1"
   },
   "devDependencies": {
-    "babel-eslint": "^7.2.3",
-    "eslint": "^4.3.0",
+    "babel-eslint": "^10.0.1",
+    "eslint": "^5.8.0",
     "eslint-config-standard": "^10.2.1",
     "eslint-loader": "^1.9.0",
     "eslint-plugin-html": "^3.1.1",
