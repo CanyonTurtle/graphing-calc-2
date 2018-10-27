@@ -13,12 +13,12 @@
     "precommit": "npm run lint"
   },
   "dependencies": {
-    "bootstrap": "^4.0.0-beta.2",
-    "bootstrap-vue": "^1.0.2",
-    "mathjs": "^3.16.5",
+    "bootstrap": ">=4.1.2",
+    "bootstrap-vue": "^1.5.1",
+    "mathjs": "^3.20.2",
     "nuxt": "^2.2.0",
     "vue-d3": "^0.1.0",
-    "vue-directive-tooltip": "^1.4.1"
+    "vue-directive-tooltip": "^1.5.0"
   },
   "devDependencies": {
     "babel-eslint": "^10.0.1",
@@ -26,9 +26,9 @@
     "eslint-config-standard": "^10.2.1",
     "eslint-loader": "^1.9.0",
     "eslint-plugin-html": "^3.1.1",
-    "eslint-plugin-import": "^2.7.0",
+    "eslint-plugin-import": "^2.14.0",
     "eslint-plugin-node": "^5.1.1",
-    "eslint-plugin-promise": "^3.5.0",
-    "eslint-plugin-standard": "^3.0.1"
+    "eslint-plugin-promise": "^3.8.0",
+    "eslint-plugin-standard": "^3.1.0"
   }
 }
